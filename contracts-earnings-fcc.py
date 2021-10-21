@@ -101,9 +101,10 @@ LIMIT 1;
             conn.commit()
             print("SQL result:", cursor.query)
             return 0
-#        except Exception as e:
-#            print("get error when exec SQL:", e)
-#            return 1
+        except Exception as e:
+            print("get error when exec SQL:", e)
+            raise ValueError('Error executing query')
+            return 1
 
     earnings_report = PythonOperator(
         task_id='earnings_report',
