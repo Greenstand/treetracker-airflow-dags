@@ -53,23 +53,11 @@ with DAG(
         bash_command='date',
     )
 
-
-# example for PostgresOperator
-#    t2 = PostgresOperator(
-#        task_id="get_planters",
-#        postgres_conn_id="postgres_default",
-#        sql="SELECT * FROM planter LIMIT 1;",
-#    )
-
     def earnings_report(ds, **kwargs):
         db = PostgresHook(postgres_conn_id="postgres_default")
         conn = db.get_conn()
         print("db:", conn)
         cursor = conn.cursor()
-#        cursor.execute("SELECT * FROM planter LIMIT 1;")
-#        print("cursor:", cursor);
-#        result = cursor.fetchall();
-#        print("result:", result);
         try:
             cursor.execute("""
 INSERT INTO earnings.earnings(
@@ -113,9 +101,9 @@ LIMIT 1;
             conn.commit()
             print("SQL result:", cursor.query)
             return 0
-        except Exception as e:
-            print("get error when exec SQL:", e)
-            return 1
+#        except Exception as e:
+#            print("get error when exec SQL:", e)
+#            return 1
 
     earnings_report = PythonOperator(
         task_id='earnings_report',
