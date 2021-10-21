@@ -32,9 +32,9 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 dag = DAG(
-    'myfirst',
+    'mysecond',
     default_args=default_args,
-    description='First attempt to process a tree',
+    description='second attempt to process ',
 )
 
 from types import SimpleNamespace
