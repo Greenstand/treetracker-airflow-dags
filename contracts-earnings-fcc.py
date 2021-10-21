@@ -38,9 +38,9 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'treetracker-earnings',
+    'contract-earnings-fcc',
     default_args=default_args,
-    description='A simple tutorial DAG',
+    description='Calculate earnings for FCC planters',
     schedule_interval= '* * * * *',
     #schedule_interval= '@hourly',
     start_date=datetime(2021, 1, 1),
@@ -48,7 +48,6 @@ with DAG(
     tags=['earnings'],
 ) as dag:
 
-    # t1, t2 and t3 are examples of tasks created by instantiating operators
     t1 = BashOperator(
         task_id='print_date',
         bash_command='date',
