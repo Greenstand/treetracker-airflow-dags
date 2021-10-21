@@ -41,10 +41,11 @@ with DAG(
     'treetracker-earnings',
     default_args=default_args,
     description='A simple tutorial DAG',
-    schedule_interval=timedelta(days=1),
+    schedule_interval= '* * * * *',
+    #schedule_interval= '@hourly',
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=['example'],
+    tags=['earnings'],
 ) as dag:
 
     # t1, t2 and t3 are examples of tasks created by instantiating operators
@@ -53,22 +54,15 @@ with DAG(
         bash_command='date',
     )
 
-#    t2 = BashOperator(
-#        task_id='sleep',
-#        depends_on_past=False,
-#        bash_command='sleep 5',
-#        retries=3,
+
+# example for PostgresOperator
+#    t2 = PostgresOperator(
+#        task_id="get_planters",
+#        postgres_conn_id="postgres_default",
+#        sql="SELECT * FROM planter LIMIT 1;",
 #    )
 
-    t2 = PostgresOperator(
-        task_id="get_planters",
-        postgres_conn_id="postgres_default",
-        sql="SELECT * FROM planter LIMIT 1;",
-    )
-
-    def print_context(ds, **kwargs):
-        print("print ght context:")
-        print("my_ds:", ds)
+    def earnings_report(ds, **kwargs):
         db = PostgresHook(postgres_conn_id="postgres_default")
         conn = db.get_conn()
         print("db:", conn)
@@ -124,31 +118,10 @@ LIMIT 1;
             print("get error when exec SQL:", e)
             return 1
 
-    run_this = PythonOperator(
-        task_id='print_the_context',
-        python_callable=print_context,
+    earnings_report = PythonOperator(
+        task_id='earnings_report',
+        python_callable=earnings_report,
         )
 
 
-    dag.doc_md = __doc__  # providing that you have a docstring at the beginning of the DAG
-    dag.doc_md = """
-    This is a documentation placed anywhere
-    """  # otherwise, type it like this
-    templated_command = dedent(
-        """
-    {% for i in range(5) %}
-        echo "{{ ds }}"
-        echo "{{ macros.ds_add(ds, 7)}}"
-        echo "{{ params.my_param }}"
-    {% endfor %}
-    """
-    )
-
-    t3 = BashOperator(
-        task_id='templated',
-        depends_on_past=False,
-        bash_command=templated_command,
-        params={'my_param': 'Parameter I passed in'},
-    )
-
-    run_this >> t1 >> [t2, t3]
+    earnings_report >> t1
