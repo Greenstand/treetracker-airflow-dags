@@ -85,6 +85,7 @@ WHERE person_id IN (
   HAVING count(trees.id) > 200
 )
 AND earnings_id IS NULL
+AND planter.organization_id IN (178)
 ) rank_filter
 WHERE RANK <= 200
 GROUP BY person_id, stakeholder_uuid
