@@ -1,17 +1,12 @@
 from datetime import datetime, timedelta
 from textwrap import dedent
 from pprint import pprint
-
-# The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
-
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-
-# Operators; we need this to operate!
 from airflow.operators.bash import BashOperator
-
 from airflow.operators.python import PythonOperator
+import psycopg2.extras
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -57,52 +52,94 @@ with DAG(
         db = PostgresHook(postgres_conn_id="postgres_default")
         conn = db.get_conn()
         print("db:", conn)
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
             cursor.execute("""
-INSERT INTO earnings.earnings(
-  id, 
-  contract_id, 
-  funder_id, 
-  currency, 
-  calculated_at, 
-  consolidation_id, 
-  consolidation_period_start, 
-  consolidation_period_end, 
-  payment_confirmation_method, 
-  status, 
-  active, 
-  amount, 
-  worker_id)
-SELECT 
-  uuid_generate_v1(), 
-  uuid_generate_v1(),
-  uuid_generate_v1(), 
-  'USD', 
-  NOW(), 
-  uuid_generate_v1(), 
-  NOW(),
-  NOW(),
-  'batch',
-  'calculated',
-  true,
-  planted.amount AS amount, 
-  /*p.person_id AS worker_id*/'dca241c2-321b-11ec-9d1b-a22d6120144d' AS worker_id 
-  FROM (
-    SELECT t.planter_id, count(*) * 0.1 amount FROM trees t
-    WHERE t.time_created >= NOW() - INTERVAL '1 HOUR'
-    GROUP BY t.planter_id
-  ) planted
-LEFT JOIN planter p
-ON planted.planter_id = p.id
-LIMIT 1;
+SELECT COUNT(tree_id) capture_count,
+COUNT(tree_id) * .02 earnings,
+person_id,
+stakeholder_uuid,
+MIN(time_created) consolidation_start_date,
+MAX(time_created) consolidation_end_date,
+ARRAY_AGG(tree_id) tree_ids
+FROM (
+SELECT trees.id tree_id, person_id, time_created,
+stakeholder_uuid,
+rank() OVER (
+  PARTITION BY person_id
+  ORDER BY time_created ASC
+)
+FROM trees
+JOIN planter
+ON trees.planter_id = planter.id
+JOIN entity
+ON entity.id = planter.person_id
+WHERE person_id IN (
+  SELECT person_id
+  FROM trees
+  JOIN planter
+  ON trees.planter_id = planter.id
+  WHERE person_id IS NOT NULL
+  AND earnings_id IS NULL
+  GROUP BY person_id
+  HAVING count(trees.id) > 200
+)
+AND earnings_id IS NULL
+) rank_filter
+WHERE RANK <= 200
+GROUP BY person_id, stakeholder_uuid
+ORDER BY person_id;
             """);
             print("SQL result:", cursor.query)
+            for row in cursor:
+                #do something with every single row here
+                #optionally print the row
+                print(row)
+                print(row['earnings'])
+                print(row['stakeholder_uuid'])
+
+                updateCursor = conn.cursor()
+                updateCursor.execute("""
+INSERT INTO earnings.earnings(
+  worker_id,
+  contract_id,
+  funder_id,
+  currency,
+  amount,
+  calculated_at,
+  consolidation_id,
+  consolidation_period_start,
+  consolidation_period_end,
+  status
+  )
+VALUES(
+  %s,
+  %s,
+  %s,
+  %s,
+  %s,
+  NOW(),
+  %s,
+  %s,
+  %s,
+  'calculated'
+)
+RETURNING *""", (row['stakeholder_uuid'], row['stakeholder_uuid'], row['stakeholder_uuid'], 'USD', row['earnings'], row['stakeholder_uuid'], row['consolidation_start_date'], row['consolidation_end_date']))
+                print("SQL result:", updateCursor.query)
+
+                earningsId = updateCursor.fetchone()[0]
+                print(earningsId)
+                updateCursor.execute("""
+UPDATE trees
+SET earnings_id = %s
+WHERE id = ANY(%s)
+""", (earningsId, row['tree_ids']))
+
             conn.commit()
-            print("SQL result:", cursor.query)
             return 0
         except Exception as e:
             print("get error when exec SQL:", e)
+            print("SQL result:", updateCursor.query)
             raise ValueError('Error executing query')
             return 1
 
