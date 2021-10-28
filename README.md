@@ -29,6 +29,7 @@ Airflow DAGs are authored using any editor that you choose.  When you author DAG
 5. As you update your DAG, airflow will run it according to the schedule you specify.  Or you can manually trigger the DAG.
 
 ### Locating the DAG id
+```
 with DAG(
     'reporting-schema-copy',   <<<--- this is the DAG id, it cannot be duplicated
     default_args=default_args,
@@ -39,3 +40,4 @@ with DAG(
     catchup=False,
     tags=['earnings'],
 )
+```
