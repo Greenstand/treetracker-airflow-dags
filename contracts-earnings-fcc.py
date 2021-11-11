@@ -150,6 +150,8 @@ with DAG(
                   '2021-11-12 00:00:00',
                   'YYYY-MM-DD HH24:MI:SS'
                 )
+                AND trees.approved = true
+                AND trees.active = true
               ) rank
               GROUP BY person_id, stakeholder_uuid
               ORDER BY person_id;
