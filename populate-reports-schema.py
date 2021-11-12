@@ -36,7 +36,7 @@ with DAG(
     'populate-reporting-schema',
     default_args=default_args,
     description='Populate the reporting schema',
-    schedule_interval= None,
+    schedule_interval= @daily,
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['reporting'],
@@ -47,7 +47,7 @@ with DAG(
         bash_command='date',
     )
 
-    postgresConnId = "postgres_automation_testing"
+    postgresConnId = "postgres_default"
 
     def populate_reporting_schema(ds, **kwargs):
         db = PostgresHook(postgres_conn_id=postgresConnId)
