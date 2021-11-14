@@ -143,7 +143,7 @@ with DAG(
                   select entity_id from getEntityRelationshipChildren(178)
                 )
                 AND time_created > TO_TIMESTAMP(
-                  '2021-10-01 00:00:00',
+                  '2021-09-01 00:00:00',
                   'YYYY-MM-DD HH24:MI:SS'
                 )
                 AND time_created <  TO_TIMESTAMP(
