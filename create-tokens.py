@@ -108,7 +108,7 @@ with DAG(
                             AND active = true 
                             AND approved = true 
                             AND token_id IS NULL 
-                            LIMIT 2
+                            LIMIT 3000
                     """.format(entityId))
                 trees = cursor.fetchall()
                 
