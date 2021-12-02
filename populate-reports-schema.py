@@ -36,7 +36,7 @@ with DAG(
     'populate-reporting-schema',
     default_args=default_args,
     description='Populate the reporting schema',
-    schedule_interval= @daily,
+    schedule_interval= "@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['reporting'],
