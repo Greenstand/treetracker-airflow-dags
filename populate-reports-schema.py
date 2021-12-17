@@ -13,8 +13,8 @@ import psycopg2.extras
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
+    'email': ['x6i4h0c1i4v9l5t6@greenstand.slack.com'],
+    'email_on_failure': True,
     'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
@@ -78,7 +78,7 @@ with DAG(
               ON trees.species_id = tree_species.id
               WHERE trees.active = true
               AND planter_identifier IS NOT NULL
-              AND planting_organization.id IN getEntityRelationshipChildren(178);
+              AND planting_organization.id IN (SELECT entity_id from getEntityRelationshipChildren(178));
             """);
             print("SQL result:", cursor.query)
 
