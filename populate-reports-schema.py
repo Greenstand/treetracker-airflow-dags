@@ -76,7 +76,6 @@ with DAG(
               ON planting_organization.id = trees.planting_organization_id
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
-              JOIN entity
               WHERE trees.active = true
               AND planter_identifier IS NOT NULL
               AND planting_organization.id IN getEntityRelationshipChildren(178);
