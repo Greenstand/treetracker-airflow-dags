@@ -73,12 +73,12 @@ with DAG(
               JOIN planter
               ON planter.id = trees.planter_id
               LEFT JOIN entity AS planting_organization
-              ON planting_organization.id = trees.planting_organization_id
+              ON planting_organization.id = planter.organization_id
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
               WHERE trees.active = true
               AND planter_identifier IS NOT NULL
-              AND planting_organization.id IN (SELECT entity_id from getEntityRelationshipChildren(178));
+              AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178));
             """);
             print("SQL result:", cursor.query)
 
