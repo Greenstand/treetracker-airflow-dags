@@ -1,16 +1,9 @@
 
 import io
 
-def capture_export():
+def capture_export(conn):
     """Prints a message with the current time"""
     print("capture_export...")
-    import psycopg2
-    # read env variables DB_URL
-    import os
-    # read env variables DB_URL
-    DB_URL = os.environ['DB_URL']
-    print("DB_URL:", DB_URL)
-    conn = psycopg2.connect(DB_URL, sslmode='require')
     # create cursor
     cur = conn.cursor()
     # execute query
