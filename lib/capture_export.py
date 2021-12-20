@@ -6,11 +6,16 @@ def capture_export(conn):
     print("capture_export...")
     # create cursor
     cur = conn.cursor()
+    # array of file names
+    columns = ["id","planter_id","device_identifier","planter_identifier","approved as verification_status","species_id","token_id","time_created"
+]
+    sql = f"SELECT {','.join(columns)} FROM trees LIMIT 20"
+    print("SQL:", sql)
     # execute query
-    cur.execute("SELECT id, planter_id FROM trees LIMIT 2")
+    cur.execute(sql)
     # fetch all rows
     rows = cur.fetchall()
-    lines = ['id, planter_id']
+    lines = [','.join(columns)]
     # print rows
     print ("rows:", rows)
     for row in rows:
