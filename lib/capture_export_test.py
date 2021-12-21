@@ -11,7 +11,7 @@ class Test_TestIncrementDecrement(unittest.TestCase):
         DB_URL = os.environ['DB_URL']
         print("DB_URL:", DB_URL)
         conn = psycopg2.connect(DB_URL, sslmode='require')
-        self.assertEqual(capture_export.capture_export(conn), "Done")
+        self.assertEqual(capture_export.capture_export(conn, '2020-12'), "Done")
 
 if __name__ == '__main__':
     # Run the unit tests in the test suite with name 'Test_TestIncrementDecrement'

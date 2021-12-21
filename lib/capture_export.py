@@ -1,15 +1,27 @@
 
 import io
 
-def capture_export(conn):
+def capture_export(conn, year_month):
     """Prints a message with the current time"""
     print("capture_export...")
+    # check yearMonth (yyyy-mm) format with regex
+    import re
+    if not re.match(r'^\d{4}-\d{2}$', year_month):
+        raise ValueError('yearMonth format error')
+
+    start_date = year_month + "-01"
+    # calculate end_date of the month
+    import datetime
+    # get the last day of the month
+    end_date = (datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=31)).strftime("%Y-%m-%d")
+    print ("to export data from:", start_date, "to:", end_date)
+
     # create cursor
     cur = conn.cursor()
     # array of file names
     columns = ["id","planter_id","device_identifier","planter_identifier","approved as verification_status","species_id","token_id","time_created"
 ]
-    sql = f"SELECT {','.join(columns)} FROM trees LIMIT 20"
+    sql = f"SELECT {','.join(columns)} FROM trees WHERE time_created BETWEEN '{start_date}' and '{end_date}' LIMIT 20"
     print("SQL:", sql)
     # execute query
     cur.execute(sql)
