@@ -38,7 +38,7 @@ with DAG(
     'grower_export',
     default_args=default_args,
     description='grower_export version 1',
-    schedule_interval=None,
+    schedule_interval="@daily",
     start_date=days_ago(2),
     catchup=False,
     tags=['CKAN', 'freetown'],
