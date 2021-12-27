@@ -21,39 +21,33 @@ def grower_export(conn, date):
     # go through the resource list
     for resource in resources:
         # check if the resource is already in the CKAN
-        if resource['name'] == f'capture_{date}.csv':
+        if resource['name'] == f'grower_{date}.csv':
             print('resource already in the CKAN')
             raise ValueError(f'resource {date} already in the CKAN')
-
-    start_date = date + "-01"
-    # calculate end_date of the month
-    import datetime
-    # get the last day of the month
-    end_date = (datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=31)).strftime("%Y-%m-%d")
-    print ("to export data from:", start_date, "to:", end_date)
 
     # create cursor
     cur = conn.cursor()
     # array of file names
-    columns = ["id","planter_id","device_identifier","planter_identifier","verification_status","species_id","token_id","time_created"
-]
+    columns = ["id","first_name","last_name","email","phone","image_url", "registed_at"]
     sql = f"""
-        SELECT 
-            id,
-            planter_id,
-            device_identifier,
-            planter_identifier,
-            CASE
-            WHEN active = true AND approved = false THEN 'Awaiting'
-            WHEN active = true AND approved = true THEN 'Approved'
-            WHEN active = false AND approved = false THEN 'Rejected'
-            END as verification_status,
-            species_id,
-            token_id,
-            time_created 
-        FROM trees 
-        WHERE time_created BETWEEN '{start_date}' and '{end_date}' 
-        LIMIT 20;""";
+SELECT 
+  p.id,
+  p.first_name,
+  p.last_name,
+  p.email,
+  p.phone,
+  p.image_url,
+  created_at as registed_at
+FROM
+  planter p
+LEFT JOIN
+  planter_registrations pr
+ON pr.planter_id = p.id
+WHERE
+  pr.created_at < '{date}'
+ORDER BY p.id DESC
+LIMIT 20;
+        """;
 
     print("SQL:", sql)
     # execute query
@@ -84,8 +78,7 @@ def grower_export(conn, date):
     try:
         # convert lines to file like object
         f = io.StringIO("\n".join(lines))
-        date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        file_name = f"capture_{date}.csv"
+        file_name = f"grower_{date}.csv"
         r = requests.post('https://dev-ckan.treetracker.org/api/3/action/resource_create', 
             data={
                 "package_id":"7753e581-6e93-4eb2-8dea-4ca31f0c4d24",
