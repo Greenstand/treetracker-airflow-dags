@@ -8,7 +8,7 @@ def grower_export(conn, date):
     # check yearMonth (yyyy-mm) format with regex
     import re
     if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
-      msg = f'yearMonth format error {date}';
+      msg = f'date format error {date}';
       raise ValueError(msg)
 
     # check if the resource are already in the CKAN
@@ -78,6 +78,7 @@ LIMIT 20;
     try:
         # convert lines to file like object
         f = io.StringIO("\n".join(lines))
+        date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         file_name = f"grower_{date}.csv"
         r = requests.post('https://dev-ckan.treetracker.org/api/3/action/resource_create', 
             data={
