@@ -51,12 +51,12 @@ with DAG(
 
     postgresConnId = "postgres_default"
 
-    def capture_export_wrap(ds, **kwargs):
+    def grower_export_wrap(ds, **kwargs):
       from lib.utils import print_time
       db = PostgresHook(postgres_conn_id=postgresConnId)
       conn = db.get_conn()  
       try:
-        date = datetime.now().strftime("%Y%m%d")
+        date = datetime.now().strftime("%Y-%m-%d")
         grower_export(conn, date)
         return 0
       except Exception as e:
@@ -66,7 +66,7 @@ with DAG(
 
     capture_export_task = PythonOperator(
         task_id='capture_export',
-        python_callable=capture_export_wrap,
+        python_callable=grower_export_wrap,
         )
 
 
