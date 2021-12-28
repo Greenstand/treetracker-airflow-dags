@@ -78,7 +78,6 @@ LIMIT 20;
     try:
         # convert lines to file like object
         f = io.StringIO("\n".join(lines))
-        date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         file_name = f"grower_{date}.csv"
         r = requests.post('https://dev-ckan.treetracker.org/api/3/action/resource_create', 
             data={
