@@ -2,7 +2,7 @@
 import io
 import requests
 
-def capture_export(conn, date, organization_id):
+def capture_export(conn, date, organization_id, ckan_config):
     """Prints a message with the current time"""
     print("capture_export...")
     # check yearMonth (yyyy-mm) format with regex
@@ -16,8 +16,10 @@ def capture_export(conn, date, organization_id):
 
     # check if the resource are already in the CKAN
     # get the resource list from CKAN
-    response = requests.get("https://dev-ckan.treetracker.org/api/3/action/package_show?id=capture-data",
-        headers={"X-CKAN-API-Key": "270a5f9e-9319-4f5a-983c-1fa50087fa2d"}
+    url = f"{ckan_config['CKAN_DOMAIN']}/api/3/action/package_show?id={ckan_config['CKAN_DATASET_NAME']}"
+    print("url:", url)
+    response = requests.get(url,
+        headers={"X-CKAN-API-Key": ckan_config['CKAN_API_KEY']}
     )
     print ('response:', response)
     # throw an error if the resource is not found
@@ -103,14 +105,14 @@ def capture_export(conn, date, organization_id):
         f = io.StringIO("\n".join(lines))
         date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
         file_name = f"capture_{date}.csv"
-        r = requests.post('https://dev-ckan.treetracker.org/api/3/action/resource_create', 
+        r = requests.post(f"{ckan_config['CKAN_DOMAIN']}/api/3/action/resource_create", 
             data={
                 "package_id": id,
                 "url": "http://test.com/sample.csv",
                 "name": file_name,
                 "format": "CSV",
                 },
-            headers={"X-CKAN-API-Key": "270a5f9e-9319-4f5a-983c-1fa50087fa2d"},
+            headers={"X-CKAN-API-Key": ckan_config['CKAN_API_KEY']},
             files=[('upload', f)]
             # files={'report.xls': f}
         )
