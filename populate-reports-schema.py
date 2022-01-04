@@ -13,8 +13,8 @@ import psycopg2.extras
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
+    'email': ['x6i4h0c1i4v9l5t6@greenstand.slack.com'],
+    'email_on_failure': True,
     'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
@@ -36,7 +36,7 @@ with DAG(
     'populate-reporting-schema',
     default_args=default_args,
     description='Populate the reporting schema',
-    schedule_interval= @daily,
+    schedule_interval= "@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['reporting'],
@@ -73,40 +73,13 @@ with DAG(
               JOIN planter
               ON planter.id = trees.planter_id
               LEFT JOIN entity AS planting_organization
-              ON planting_organization.id = trees.planting_organization_id
+              ON planting_organization.id = planter.organization_id
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
               WHERE trees.active = true
-              AND planter_identifier IS NOT NULL;
+              AND planter_identifier IS NOT NULL
+              AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178));
             """);
-SELECT
-  trees.uuid AS capture_uuid,
-  planter.first_name AS planter_first_name,
-  planter.last_name AS planter_last_name,
-  planter.phone AS planter_identifier,
-  trees.time_created AS capture_created_at,
-  trees.note AS note,
-  trees.lat AS lat,
-  trees.lon AS lon,
-  trees.approved AS approved,
-  planting_organization.stakeholder_uuid AS planting_organization_uuid,
-  planting_organization.name AS planting_organization_name,
-  tree_species.name AS species,
-  region.id as regin_id
-FROM trees
-JOIN planter
-ON planter.id = trees.planter_id
-LEFT JOIN entity AS planting_organization
-ON planting_organization.id = planter.organization_id
-LEFT JOIN tree_species
-ON trees.species_id = tree_species.id
-LEFT JOIN region
-on ST_WITHIN(trees.estimated_geometric_location, region.geom)
-WHERE trees.active = true
-AND region.type_id = 25
-AND planter_identifier IS NOT NULL
-AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178));
-
             print("SQL result:", cursor.query)
 
             updateCursor.execute("""
