@@ -16,10 +16,19 @@ def capture_export(conn, date, organization_id):
 
     # check if the resource are already in the CKAN
     # get the resource list from CKAN
-    response = requests.get("https://dev-ckan.treetracker.org/api/3/action/package_show?id=my_dataset_name20211218160056")
-    # print ('response:', response)
+    response = requests.get("https://dev-ckan.treetracker.org/api/3/action/package_show?id=capture-data",
+        headers={"X-CKAN-API-Key": "270a5f9e-9319-4f5a-983c-1fa50087fa2d"}
+    )
+    print ('response:', response)
+    # throw an error if the resource is not found
     package_data = response.json()
     print('pacage data:', package_data)
+    id = package_data['result']['id']
+    # e.g. 75aeeb9c-f671-408b-8b08-f24ec0edefb0
+    # using Regex to check if the id is in the format of UUID
+    import re
+    if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', id):
+        raise ValueError('id format error:', id)
     resources = package_data['result']['resources']
     # go through the resource list
     for resource in resources:
@@ -96,7 +105,7 @@ def capture_export(conn, date, organization_id):
         file_name = f"capture_{date}.csv"
         r = requests.post('https://dev-ckan.treetracker.org/api/3/action/resource_create', 
             data={
-                "package_id":"7753e581-6e93-4eb2-8dea-4ca31f0c4d24",
+                "package_id": id,
                 "url": "http://test.com/sample.csv",
                 "name": file_name,
                 "format": "CSV",
