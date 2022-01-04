@@ -9,6 +9,7 @@ from airflow.operators.python import PythonOperator
 import psycopg2.extras
 from airflow.utils.dates import days_ago
 from lib.capture_export import capture_export
+from airflow.models import Variable
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -71,7 +72,20 @@ with DAG(
         #   year_month = str(last_year) + "-" + str(last_month)
         #   print ("year_month:", year_month)
           date = datetime.now().strftime("%Y-%m-%d")
-          capture_export(conn, date, 178)
+          print("date:", date)
+          CKAN_DOMAIN = Variable.get("CKAN_DOMAIN")
+          # check if CKAN_DOMAIN exists
+          assert CKAN_DOMAIN
+          CKAN_DATASET_NAME= Variable.get("CKAN_DATASET_NAME")
+          assert CKAN_DATASET_NAME
+          CKAN_API_KEY = Variable.get("CKAN_API_KEY")
+          assert CKAN_API_KEY
+          ckan_config = {
+                "CKAN_DOMAIN": CKAN_DOMAIN,
+                "CKAN_DATASET_NAME": CKAN_DATASET_NAME,
+                "CKAN_API_KEY": CKAN_API_KEY,
+            }
+          capture_export(conn, date, 178, ckan_config)
           return 0
       except Exception as e:
           print("get error when exec SQL:", e)
