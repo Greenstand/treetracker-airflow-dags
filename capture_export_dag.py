@@ -71,7 +71,7 @@ with DAG(
         #   year_month = str(last_year) + "-" + str(last_month)
         #   print ("year_month:", year_month)
           date = datetime.now().strftime("%Y-%m-%d")
-          capture_export(conn, date)
+          capture_export(conn, date, 178)
           return 0
       except Exception as e:
           print("get error when exec SQL:", e)
