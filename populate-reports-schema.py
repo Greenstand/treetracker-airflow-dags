@@ -80,6 +80,34 @@ with DAG(
               AND planter_identifier IS NOT NULL
               AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178));
             """);
+SELECT
+  trees.uuid AS capture_uuid,
+  planter.first_name AS planter_first_name,
+  planter.last_name AS planter_last_name,
+  planter.phone AS planter_identifier,
+  trees.time_created AS capture_created_at,
+  trees.note AS note,
+  trees.lat AS lat,
+  trees.lon AS lon,
+  trees.approved AS approved,
+  planting_organization.stakeholder_uuid AS planting_organization_uuid,
+  planting_organization.name AS planting_organization_name,
+  tree_species.name AS species,
+  region.id as regin_id
+FROM trees
+JOIN planter
+ON planter.id = trees.planter_id
+LEFT JOIN entity AS planting_organization
+ON planting_organization.id = planter.organization_id
+LEFT JOIN tree_species
+ON trees.species_id = tree_species.id
+LEFT JOIN region
+on ST_WITHIN(trees.estimated_geometric_location, region.geom)
+WHERE trees.active = true
+AND region.type_id = 25
+AND planter_identifier IS NOT NULL
+AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178));
+
             print("SQL result:", cursor.query)
 
             updateCursor.execute("""
