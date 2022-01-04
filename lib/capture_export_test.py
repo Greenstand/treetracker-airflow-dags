@@ -10,6 +10,9 @@ class Test_TestIncrementDecrement(unittest.TestCase):
         # read env variables DB_URL
         DB_URL = os.environ['DB_URL']
         print("DB_URL:", DB_URL)
+        CKAN_DOMAIN = os.environ['CKAN_DOMAIN']
+        # assert CKAN_DOMAIN exists
+        self.assertTrue(CKAN_DOMAIN)
         conn = psycopg2.connect(DB_URL, sslmode='require')
         # execute capture_export.capture_export(conn, '2020-12') should throw an error
         # try:
