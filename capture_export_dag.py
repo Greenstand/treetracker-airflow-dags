@@ -56,21 +56,22 @@ with DAG(
       db = PostgresHook(postgres_conn_id=postgresConnId)
       conn = db.get_conn()  
       try:
-          # generate last month 
-          # get the month value of the last month
-          now = datetime.now()
-          last_month = now.month - 1
-          # get the year value of the last month
-          last_year = now.year
-          if last_month == 0:
-              last_month = 12
-              last_year = now.year - 1
-          print ("last_month:", last_month)
-          print ("last_year:", last_year)
-          # get the last month
-          year_month = str(last_year) + "-" + str(last_month)
-          print ("year_month:", year_month)
-          capture_export(conn, year_month)
+        #   # generate last month 
+        #   # get the month value of the last month
+        #   now = datetime.now()
+        #   last_month = now.month - 1
+        #   # get the year value of the last month
+        #   last_year = now.year
+        #   if last_month == 0:
+        #       last_month = 12
+        #       last_year = now.year - 1
+        #   print ("last_month:", last_month)
+        #   print ("last_year:", last_year)
+        #   # get the last month
+        #   year_month = str(last_year) + "-" + str(last_month)
+        #   print ("year_month:", year_month)
+          date = datetime.now().strftime("%Y-%m-%d")
+          capture_export(conn, date)
           return 0
       except Exception as e:
           print("get error when exec SQL:", e)

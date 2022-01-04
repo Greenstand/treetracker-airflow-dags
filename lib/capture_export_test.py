@@ -12,12 +12,12 @@ class Test_TestIncrementDecrement(unittest.TestCase):
         print("DB_URL:", DB_URL)
         conn = psycopg2.connect(DB_URL, sslmode='require')
         # execute capture_export.capture_export(conn, '2020-12') should throw an error
-        try:
-            capture_export.capture_export(conn, '2020-11')
-            self.assertTrue(False)
-        except Exception as e:
-            print("get error when exec SQL:", e)
-            self.assertTrue(True)
+        # try:
+        capture_export.capture_export(conn, '2020-12-31', 1)
+        # self.assertTrue(False)
+        # except Exception as e:
+        #     print("get error when exec SQL:", e)
+        #     self.assertTrue(True)
 
 if __name__ == '__main__':
     # Run the unit tests in the test suite with name 'Test_TestIncrementDecrement'
