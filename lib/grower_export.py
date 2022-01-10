@@ -130,4 +130,5 @@ LIMIT 20;
     except urllib2.HTTPError as e:
         print('Error code: {0}'.format(e.code))
         print(e.read())
+        raise e
     return "Done"
