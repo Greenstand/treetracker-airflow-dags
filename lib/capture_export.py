@@ -47,7 +47,7 @@ def capture_export(conn, date, organization_id, ckan_config):
     # print ("to export data from:", start_date, "to:", end_date)
 
     # create cursor
-    cur = conn.cursor()
+    cur = conn.cursor('server-side-cursor')
     # array of file names
     columns = ["id","planter_id","device_identifier","planter_identifier","verification_status","species_id","token_id","time_created"
 ]
@@ -126,6 +126,10 @@ def capture_export(conn, date, organization_id, ckan_config):
         data=data
     )
     print ('response:', response)
+
+    # delete the file
+    import os
+    os.remove(file_name)
     return True
 
     # # now fetch the data and convert to stream object to be used in the next step
