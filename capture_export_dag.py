@@ -39,7 +39,7 @@ with DAG(
     'capture_export',
     default_args=default_args,
     description='capture_export version 1',
-    schedule_interval=None,
+    schedule_interval='@hourly',
     start_date=days_ago(2),
     catchup=False,
     tags=['CKAN', 'freetown'],
