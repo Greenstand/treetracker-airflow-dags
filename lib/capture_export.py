@@ -134,7 +134,11 @@ def capture_export(conn, date, organization_id, ckan_config):
 
     # check response status code is 200
     if response.status_code != 200:
+        # print http response body
+        print(response.text)
         print ('response:', response)
+        # print response as json
+        print('json:', response.json())
         raise ValueError('response status code is not 200')
     return True
 
