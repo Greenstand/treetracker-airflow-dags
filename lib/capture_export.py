@@ -72,7 +72,7 @@ def capture_export(conn, date, organization_id, ckan_config):
         AND planter.organization_id IN (
             select entity_id from getEntityRelationshipChildren({organization_id})
         )
-        LIMIT 20;""";
+        """;
 
     print("SQL:", sql)
     # execute query
