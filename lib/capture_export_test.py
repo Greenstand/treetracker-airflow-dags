@@ -26,7 +26,7 @@ class Test_TestIncrementDecrement(unittest.TestCase):
         conn = psycopg2.connect(DB_URL, sslmode='require')
         # execute capture_export.capture_export(conn, '2020-12') should throw an error
         # try:
-        capture_export.capture_export(conn, '2020-12-31', 1, ckan_config)
+        capture_export.capture_export(conn, '2020-12-31', 178, ckan_config)
         # self.assertTrue(False)
         # except Exception as e:
         #     print("get error when exec SQL:", e)

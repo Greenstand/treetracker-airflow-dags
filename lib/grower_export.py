@@ -2,13 +2,18 @@
 import io
 import requests
 
-def grower_export(conn, date, ckan_config):
+def grower_export(conn, date, organization_id, ckan_config):
     """Prints a message with the current time"""
     print("capture_export...")
     # check yearMonth (yyyy-mm) format with regex
     import re
     if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
       msg = f'date format error {date}';
+      raise ValueError(msg)
+    
+    # check organization_id is int
+    if not isinstance(organization_id, int):
+      msg = f'organization_id must be int';
       raise ValueError(msg)
     
     import datetime 
@@ -62,6 +67,9 @@ LEFT JOIN
 ON pr.planter_id = p.id
 WHERE
   pr.created_at < '{date}'
+  AND p.organization_id IN (
+    select entity_id from getEntityRelationshipChildren({organization_id})
+  )
 ORDER BY p.id DESC
 LIMIT 20;
         """;
