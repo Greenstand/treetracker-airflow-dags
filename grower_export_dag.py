@@ -74,9 +74,8 @@ with DAG(
         grower_export(conn, date, 178, ckan_config)
         return 0
       except Exception as e:
-          print("get error when exec SQL:", e)
-        #   raise ValueError('Error executing query')
-          return 1
+          print("get error when export:", e)
+          raise ValueError('Error executing query')
 
     capture_export_task = PythonOperator(
         task_id='capture_export',
