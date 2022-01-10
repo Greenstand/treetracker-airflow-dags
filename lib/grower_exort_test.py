@@ -25,7 +25,7 @@ class Test_Grower_Export(unittest.TestCase):
             "CKAN_API_KEY": CKAN_API_KEY,
         }
         # execute capture_export.capture_export(conn, '2020-12') should throw an error
-        result = grower_export.grower_export(conn, '2020-11-10', ckan_config)
+        result = grower_export.grower_export(conn, '2020-11-10', 1, ckan_config)
         # use unittest to check the result
         self.assertTrue(result)
 

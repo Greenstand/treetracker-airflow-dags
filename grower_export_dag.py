@@ -9,6 +9,7 @@ from airflow.operators.python import PythonOperator
 import psycopg2.extras
 from airflow.utils.dates import days_ago
 from lib.grower_export import grower_export
+from airflow.models import Variable
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -38,7 +39,7 @@ with DAG(
     'grower_export',
     default_args=default_args,
     description='grower_export version 1',
-    schedule_interval="@daily",
+    schedule_interval="@hourly",
     start_date=days_ago(2),
     catchup=False,
     tags=['CKAN', 'freetown'],
@@ -57,11 +58,24 @@ with DAG(
       conn = db.get_conn()  
       try:
         date = datetime.now().strftime("%Y-%m-%d")
-        grower_export(conn, date)
+        CKAN_DOMAIN = Variable.get("CKAN_DOMAIN")
+        # check if CKAN_DOMAIN exists
+        assert CKAN_DOMAIN
+        CKAN_DATASET_NAME_GROWER_DATA= Variable.get("CKAN_DATASET_NAME_GROWER_DATA")
+        assert CKAN_DATASET_NAME_GROWER_DATA
+        CKAN_API_KEY = Variable.get("CKAN_API_KEY")
+        assert CKAN_API_KEY
+        ckan_config = {
+            "CKAN_DOMAIN": CKAN_DOMAIN,
+            "CKAN_DATASET_NAME_GROWER_DATA": CKAN_DATASET_NAME_GROWER_DATA,
+            "CKAN_API_KEY": CKAN_API_KEY,
+        }
+        print("ckan_config:", ckan_config)
+        grower_export(conn, 178, date)
         return 0
       except Exception as e:
           print("get error when exec SQL:", e)
-          raise ValueError('Error executing query')
+        #   raise ValueError('Error executing query')
           return 1
 
     capture_export_task = PythonOperator(

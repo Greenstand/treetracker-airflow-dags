@@ -1,6 +1,7 @@
 
 import io
 import requests
+import os
 
 def capture_export(conn, date, organization_id, ckan_config):
     """Prints a message with the current time"""
@@ -98,6 +99,10 @@ def capture_export(conn, date, organization_id, ckan_config):
     cur.close()
     # close the file
     f.close()
+
+    # print size of the file
+    print("file size:", os.stat(file_name).st_size)
+
     # upload the file to the CKAN
     url = f"{ckan_config['CKAN_DOMAIN']}/api/action/resource_create"
     print("url:", url)
@@ -129,7 +134,6 @@ def capture_export(conn, date, organization_id, ckan_config):
     print ('response:', response)
 
     # delete the file
-    import os
     os.remove(file_name)
 
     # check response status code is 200
