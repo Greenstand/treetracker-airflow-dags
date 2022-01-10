@@ -85,6 +85,7 @@ with DAG(
                 "CKAN_DATASET_NAME": CKAN_DATASET_NAME,
                 "CKAN_API_KEY": CKAN_API_KEY,
             }
+          print("ckan_config:", ckan_config)
           capture_export(conn, date, 178, ckan_config)
           return 0
       except Exception as e:

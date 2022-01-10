@@ -81,6 +81,7 @@ def capture_export(conn, date, organization_id, ckan_config):
     # create a new file called 'temp.csv' in the current directory
     date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
     file_name = f"capture_{date}.csv"
+    print("file_name:", file_name)
     with open(file_name, 'w') as f:
         f.write(f"{','.join(columns)}\n")
         # write the data rows
@@ -130,6 +131,11 @@ def capture_export(conn, date, organization_id, ckan_config):
     # delete the file
     import os
     os.remove(file_name)
+
+    # check response status code is 200
+    if response.status_code != 200:
+        print ('response:', response)
+        raise ValueError('response status code is not 200')
     return True
 
     # # now fetch the data and convert to stream object to be used in the next step
