@@ -40,7 +40,7 @@ with DAG(
     'earing_export',
     default_args=default_args,
     description='earing_export version 1',
-    schedule_interval='@hourly',
+    schedule_interval='@daily',
     start_date=days_ago(2),
     catchup=False,
     tags=['CKAN', 'freetown'],
