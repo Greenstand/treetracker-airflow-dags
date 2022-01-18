@@ -85,7 +85,7 @@ with DAG(
               AND planter_identifier IS NOT NULL
               AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178))
               AND region_type.type = 'fcc_catchments'
-              AND trees.id = 827280 
+              --- AND trees.id = 827280 
               ;
             """);
             print("SQL result:", cursor.query)
