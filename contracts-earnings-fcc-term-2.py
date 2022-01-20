@@ -33,7 +33,7 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'contract-earnings-fcc',
+    'contract-earnings-fcc-term-2',
     default_args=default_args,
     description='Calculate earnings for FCC planters',
     schedule_interval= None,
