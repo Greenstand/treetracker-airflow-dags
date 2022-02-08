@@ -182,7 +182,8 @@ with DAG(
                     consolidation_rule_id,
                     consolidation_period_start,
                     consolidation_period_end,
-                    status
+                    status,
+                    captures_count
                     )
                   VALUES(
                     %s,
@@ -194,7 +195,8 @@ with DAG(
                     %s,
                     %s,
                     %s,
-                    'calculated'
+                    'calculated',
+                    %s,
                   )
                   RETURNING *
               """, ( row['stakeholder_uuid'],
@@ -204,7 +206,9 @@ with DAG(
                      earnings,
                      freetown_base_contract_consolidation_uuid,
                      row['consolidation_start_date'],
-                     row['consolidation_end_date']))
+                     row['consolidation_end_date'],
+                     row['capture_count']
+                     ))
                 print("SQL result:", updateCursor.query)
 
                 earningsId = updateCursor.fetchone()[0]
