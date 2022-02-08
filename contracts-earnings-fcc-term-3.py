@@ -196,7 +196,7 @@ with DAG(
                     %s,
                     %s,
                     'calculated',
-                    %s,
+                    %s
                   )
                   RETURNING *
               """, ( row['stakeholder_uuid'],
