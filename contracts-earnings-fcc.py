@@ -36,7 +36,7 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'contract-earnings-fcc-term-1',
+    'contract-earnings-fcc',
     default_args=default_args,
     description='Calculate earnings for FCC planters',
     schedule_interval= None,
@@ -55,7 +55,6 @@ with DAG(
     def create_new_person_records(ds, **kwargs):
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()  
-        import lib.planter_entity
         planter_entity(conn)
         return 1
 
@@ -64,7 +63,6 @@ with DAG(
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()
         print("db:", conn)
-        import lib.contracts_earnings_fcc
         contract_earnings_fcc(conn)
         return 1
 
