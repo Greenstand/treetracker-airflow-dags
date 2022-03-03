@@ -59,7 +59,7 @@ def contract_earnings_fcc_term(conn, start_date, end_date):
           print(row)
 
           #calculate the earnings based on FCC logic
-          multiplier = (row['capture_count'] - row['capture_count'] % 100) / 10 / 100
+          multiplier = (row['capture_count'] - row['capture_count'] % 1) / 10 / 100 # TODO !!! change 100 to 1 temporarily
           if multiplier > 1: 
             multiplier = 1
           print( "multiplier " + str(multiplier) )
