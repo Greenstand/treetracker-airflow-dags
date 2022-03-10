@@ -7,9 +7,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import psycopg2.extras
-from lib.contracts_earnings_fcc import contract_earnings_fcc
-
-from lib.planter_entity import planter_entity
+from airflow.utils.dates import days_ago
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -36,11 +34,11 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'contract-earnings-fcc',
+    'test1',
     default_args=default_args,
-    description='Calculate earnings for FCC planters',
-    schedule_interval= None,
-    start_date=datetime(2021, 1, 1),
+    description='to test update',
+    schedule_interval=None,
+    start_date=days_ago(2),
     catchup=False,
     tags=['earnings', 'freetown'],
 ) as dag:
@@ -53,28 +51,28 @@ with DAG(
     postgresConnId = "postgres_default"
 
     def create_new_person_records(ds, **kwargs):
-        db = PostgresHook(postgres_conn_id=postgresConnId)
-        conn = db.get_conn()  
-        planter_entity(conn)
-        return 1
+      print("xxxxxxxxxxx ") 
+      # import print_time from lib/utils.py
+      from lib.utils import print_time
 
-
-    def earnings_report(ds, **kwargs):
-        db = PostgresHook(postgres_conn_id=postgresConnId)
-        conn = db.get_conn()
-        print("db:", conn)
-        contract_earnings_fcc(conn)
-        return 1
+      print_time("xxxhahah")
+        # db = PostgresHook(postgres_conn_id=postgresConnId)
+        # conn = db.get_conn()  
+        # cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # try:
+        #     # conn.commit()
+        #     print("xxxxxxxxxxxxxxxxxxxxxxxxxx")
+        #     return 0
+        # except Exception as e:
+        #     print("get error when exec SQL:", e)
+        #     print("SQL result:", updateCursor.query)
+        #     raise ValueError('Error executing query')
+        #     return 1
 
     create_new_person_records = PythonOperator(
         task_id='create_new_person_records',
         python_callable=create_new_person_records,
         )
 
-    earnings_report = PythonOperator(
-        task_id='earnings_report',
-        python_callable=earnings_report,
-        )
 
-
-    create_new_person_records >> earnings_report >> t1
+    create_new_person_records >> t1

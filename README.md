@@ -4,13 +4,22 @@ This repository contains automations for Treetracker processes using an open sou
 
 # Set up your development environment
 
-## Option 1: Install using pip
+## Option 1: Develop without installing airflow
+
+To run Python code without installing airflow:
+
+1. Add Python code under `lib` folder.
+2. Write unit test and use IDE to run it like this:
+ ![image](https://user-images.githubusercontent.com/5744708/153327472-31f32345-ce36-4238-98cc-5a94024f3cd8.png)
+3. When the test passed, add new dag file to invoke the script/function.
+
+## Option 2: Install using pip
 sudo pip3 install apache-airflow
 
 This approach seems to work well on MacOS X, but on Windows requires many extra dependencies.
 More information is available at https://airflow.apache.org/docs/apache-airflow/stable/installation/installing-from-pypi.html#
 
-## Option 2: Run using docker
+## Option 3: Run using docker
 
 You may run a ubuntu instace in docker, and install airflow there using pip3.  There may be a docker image available on dockerhub for this purpose as well, but we have not tested any publicly available images at this time.
 

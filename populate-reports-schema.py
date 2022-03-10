@@ -56,7 +56,7 @@ with DAG(
         cursor = conn.cursor('capture_reporting_cursor', cursor_factory=psycopg2.extras.RealDictCursor)
         try:
             cursor.execute("""
-              SELECT
+             SELECT
               trees.uuid AS capture_uuid,
               planter.first_name AS planter_first_name,
               planter.last_name AS planter_last_name,
@@ -68,7 +68,8 @@ with DAG(
               trees.approved AS approved,
               planting_organization.stakeholder_uuid AS planting_organization_uuid,
               planting_organization.name AS planting_organization_name,
-              tree_species.name AS species
+              tree_species.name AS species,
+              region.name as catchment
               FROM trees
               JOIN planter
               ON planter.id = trees.planter_id
@@ -76,9 +77,16 @@ with DAG(
               ON planting_organization.id = planter.organization_id
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
+              LEFT JOIN region 
+              ON ST_WITHIN(trees.estimated_geometric_location, region.geom) 
+              LEFT JOIN region_type 
+              ON region_type.id = region.type_id
               WHERE trees.active = true
               AND planter_identifier IS NOT NULL
-              AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178));
+              AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178))
+              AND region_type.type = 'fcc_catchments'
+              --- AND trees.id = 827280 
+              ;
             """);
             print("SQL result:", cursor.query)
 
@@ -96,15 +104,16 @@ with DAG(
                   (capture_uuid, planter_first_name, planter_last_name, planter_identifier,
                    capture_created_at, lat, lon, note, approved, 
                    planting_organization_uuid, planting_organization_name,
-                   species )
+                   species, catchment )
                   values
-                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                   RETURNING *
                 """, ( 
                 row['capture_uuid'], row['planter_first_name'], row['planter_last_name'], row['planter_identifier'],
                 row['capture_created_at'], row['lat'], row['lon'], row['note'], row['approved'],
                 row['planting_organization_uuid'], row['planting_organization_name'], 
-                row['species']
+                row['species'],
+                row['catchment']
                 ) );
 
             conn.commit()
