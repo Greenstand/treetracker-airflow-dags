@@ -61,4 +61,4 @@ with DAG(
         python_callable=create_authors,
         )
 
-    create_new_person_records >> t1
+    create_authors >> t1
