@@ -13,15 +13,19 @@ def contract_earnings_fcc_term(conn, start_date, end_date):
       freetown_base_contract_uuid = "483a1f4e-0c52-4b53-b917-5ff4311ded26"
       freetown_base_contract_consolidation_uuid = "a2dc79ec-4556-4cc5-bff1-2dbb5fd35b51"
 
+      # REVISE add sub org uuid
       sql = f"""
-        SELECT COUNT(tree_id) capture_count,
+select * from (
+SELECT COUNT(tree_id) capture_count,
         person_id,
         stakeholder_uuid,
+        planter_id,
         MIN(time_created) consolidation_start_date,
         MAX(time_created) consolidation_end_date,
         ARRAY_AGG(tree_id) tree_ids
         FROM (
           SELECT trees.id tree_id, person_id, time_created,
+          planter.id as planter_id,
           stakeholder_uuid,
           rank() OVER (
             PARTITION BY person_id
@@ -47,14 +51,20 @@ def contract_earnings_fcc_term(conn, start_date, end_date):
           AND trees.approved = true
           AND trees.active = true
         ) rank
-        GROUP BY person_id, stakeholder_uuid
-        ORDER BY person_id;
+        GROUP BY person_id, stakeholder_uuid, planter_id
+        ORDER BY person_id
+) s left join (
+select stakeholder_uuid as sub_org_stakeholder_uuid, planter_id from (
+  select * from (select distinct on (t.planter_id) t.planter_id, planting_organization_id from (select distinct planter_id from trees where planter_id is not null and planting_organization_id is not null) t left join trees t2 on t.planter_id = t2.planter_id where t2.planter_id is not null and t2.planting_organization_id is not null) tt
+) pp left join entity on pp.planting_organization_id = entity.id
+) p on s.planter_id = p.planter_id
       """
 
       print("sql to run:", sql)
 
       cursor.execute(sql);
       print("SQL result:", cursor.query)
+      print("result count:", cursor.rowcount)
       for row in cursor:
           print(row)
 
@@ -81,7 +91,8 @@ def contract_earnings_fcc_term(conn, start_date, end_date):
               consolidation_period_start,
               consolidation_period_end,
               status,
-              captures_count
+              captures_count,
+              sub_organization
               )
             VALUES(
               %s,
@@ -94,6 +105,7 @@ def contract_earnings_fcc_term(conn, start_date, end_date):
               %s,
               %s,
               'calculated',
+              %s,
               %s
             )
             RETURNING *
@@ -105,7 +117,8 @@ def contract_earnings_fcc_term(conn, start_date, end_date):
                 freetown_base_contract_consolidation_uuid,
                 row['consolidation_start_date'],
                 row['consolidation_end_date'],
-                row['capture_count']
+                row['capture_count'],
+                row['sub_org_stakeholder_uuid']
                 ))
           print("SQL result:", updateCursor.query)
 
