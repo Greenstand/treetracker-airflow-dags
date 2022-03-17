@@ -69,7 +69,7 @@ select stakeholder_uuid as sub_org_stakeholder_uuid, planter_id from (
           print(row)
 
           #calculate the earnings based on FCC logic
-          multiplier = (row['capture_count'] - row['capture_count'] % 1) / 10 / 100 # TODO !!! change 100 to 1 temporarily
+          multiplier = (row['capture_count'] - row['capture_count'] % 100) / 10 / 100
           if multiplier > 1: 
             multiplier = 1
           print( "multiplier " + str(multiplier) )
