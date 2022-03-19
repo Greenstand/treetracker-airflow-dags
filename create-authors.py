@@ -52,7 +52,7 @@ with DAG(
     postgresConnId = "postgres_default"
 
     def create_authors_wrap(ds, **kwargs):
-        DISABLE_ORGANIZATION_FILTER = Variable.get("AUTHOR_CREATION_DISABLE_ORGANIZATION_FILTER")
+        DISABLE_ORGANIZATION_FILTER = Variable.get("AUTHOR_CREATION_DISABLE_ORGANIZATION_FILTER", default_var=None)
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()  
         create_authors(conn, DISABLE_ORGANIZATION_FILTER)
