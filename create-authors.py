@@ -50,15 +50,15 @@ with DAG(
 
     postgresConnId = "postgres_default"
 
-    def create_authors(ds, **kwargs):
+    def create_authors_wrap(ds, **kwargs):
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()  
         create_authors(conn)
         return 1
 
-    create_authors = PythonOperator(
+    create_authors_task = PythonOperator(
         task_id='create_authors',
-        python_callable=create_authors,
+        python_callable=create_authors_wrap,
         )
 
-    create_authors >> t1
+    create_authors_task >> t1
