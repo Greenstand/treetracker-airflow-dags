@@ -27,6 +27,8 @@ def create_authors(conn, DISABLE_ORGANIZATION_FILTER):
                 ON CONFLICT DO NOTHING
               """, ( growerRow['wallet'], ) )
               print("SQL result:", insertCursor.query)
+          conn.commit()
+
           return
 
 
