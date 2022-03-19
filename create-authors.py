@@ -6,6 +6,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+from airflow.models import Variable
 import psycopg2.extras
 from lib.messaging import create_authors
 
@@ -51,7 +52,7 @@ with DAG(
     postgresConnId = "postgres_default"
 
     def create_authors_wrap(ds, **kwargs):
-        DISABLE_ORGANIZATION_FILTER = Variable.get("DISABLE_ORGANIZATION_FILTER")
+        DISABLE_ORGANIZATION_FILTER = Variable.get("AUTHOR_CREATION_DISABLE_ORGANIZATION_FILTER")
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()  
         create_authors(conn, DISABLE_ORGANIZATION_FILTER)
