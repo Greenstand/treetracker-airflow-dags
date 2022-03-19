@@ -38,7 +38,7 @@ with DAG(
     'create-authors',
     default_args=default_args,
     description='Create messaging system users for approved organizations',
-    schedule_interval='@daily',
+    schedule_interval='@hourly',
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['messaging'],
