@@ -6,6 +6,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+from airflow.models import Variable
 import psycopg2.extras
 from lib.messaging import create_authors
 
@@ -37,7 +38,7 @@ with DAG(
     'create-authors',
     default_args=default_args,
     description='Create messaging system users for approved organizations',
-    schedule_interval='@daily',
+    schedule_interval='@hourly',
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['messaging'],
@@ -50,15 +51,16 @@ with DAG(
 
     postgresConnId = "postgres_default"
 
-    def create_authors(ds, **kwargs):
+    def create_authors_wrap(ds, **kwargs):
+        DISABLE_ORGANIZATION_FILTER = Variable.get("AUTHOR_CREATION_DISABLE_ORGANIZATION_FILTER")
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()  
-        create_authors(conn)
+        create_authors(conn, DISABLE_ORGANIZATION_FILTER)
         return 1
 
-    create_authors = PythonOperator(
+    create_authors_task = PythonOperator(
         task_id='create_authors',
-        python_callable=create_authors,
+        python_callable=create_authors_wrap,
         )
 
-    create_authors >> t1
+    create_authors_task >> t1
