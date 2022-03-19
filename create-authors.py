@@ -51,9 +51,10 @@ with DAG(
     postgresConnId = "postgres_default"
 
     def create_authors_wrap(ds, **kwargs):
+        DISABLE_ORGANIZATION_FILTER = Variable.get("DISABLE_ORGANIZATION_FILTER")
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()  
-        create_authors(conn)
+        create_authors(conn, DISABLE_ORGANIZATION_FILTER)
         return 1
 
     create_authors_task = PythonOperator(
