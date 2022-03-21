@@ -36,7 +36,9 @@ def create_authors(conn, DISABLE_ORGANIZATION_FILTER):
       approvedStakeholderIds = [
                                  "fa0148f2-7bfc-47ba-9152-446b2cfa3f56", #fairtree
                                  "04600c41-edd8-405e-bb2b-59f26f69ef51", #fairtree
-                                 "35e1c708-267b-4dd9-84be-868a954b0807"  #thtp
+                                 "35e1c708-267b-4dd9-84be-868a954b0807", #thtp
+                                 "ef98a6bd-9d69-4c75-b0f5-fdae60136291", #Greenstand
+                                 "723335ee-6266-4b64-9e1f-a1153d89658b" #ESEA
                                ] 
       for stakeholderId in approvedStakeholderIds:
           print (stakeholderId)
