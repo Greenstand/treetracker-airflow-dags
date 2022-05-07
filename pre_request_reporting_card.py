@@ -9,7 +9,7 @@ from lib.contracts_earnings_fcc import contract_earnings_fcc
 from lib.pre_request import pre_request
 
 from lib.planter_entity import planter_entity
-from airflow.models import Variabl
+from airflow.models import Variable
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
