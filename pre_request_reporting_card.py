@@ -6,6 +6,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import psycopg2.extras
 from lib.contracts_earnings_fcc import contract_earnings_fcc
+from lib.pre_request import pre_request
 
 from lib.planter_entity import planter_entity
 
@@ -50,7 +51,7 @@ with DAG(
 
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
-        contract_earnings_fcc("http://www.google.com")
+        pre_request("http://www.google.com")
         return 1
 
     pre_request_reporting_card = PythonOperator(
