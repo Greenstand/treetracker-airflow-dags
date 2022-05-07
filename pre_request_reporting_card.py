@@ -51,7 +51,7 @@ with DAG(
 
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
-        pre_request("http://www.google.com")
+        pre_request("http://www.google.com/xxxxxx")
         return 1
 
     pre_request_reporting_card = PythonOperator(
