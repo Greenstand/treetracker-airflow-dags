@@ -14,6 +14,8 @@ def pre_request(url):
         print("response.status_code:", response.status_code)
         # check the response status code, if not 200, raise an error
         if response.status_code != 200:
+            print("response:", response)
+            print("response.status_code:", response.status_code)
             raise Exception("response status code is not 200")
     # catch any errors
     except Exception as e:
