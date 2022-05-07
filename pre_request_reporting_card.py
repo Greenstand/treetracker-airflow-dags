@@ -8,6 +8,7 @@ import psycopg2.extras
 from lib.contracts_earnings_fcc import contract_earnings_fcc
 
 from lib.planter_entity import planter_entity
+from airflow.models import Variabl
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -50,7 +51,14 @@ with DAG(
 
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
-        contract_earnings_fcc("http://www.google.com")
+        K8S_DOMAIN = Variable.get("K8S_DOMAIN")
+        # check if CKAN_DOMAIN exists
+        assert K8S_DOMAIN is not None
+        date = datetime.now().strftime("%Y-%m-%d")
+        # https://dev-k8s.treetracker.org/reporting/capture/statistics?capture_created_start_date=1970-01-01&capture_created_end_date=2022-05-07
+        url = f"https://{K8S_DOMAIN}/reporting/capture/statistics?capture_created_start_date=1970-01-01&capture_created_end_date={date}"
+        print(url)
+        pre_request(url)
         return 1
 
     pre_request_reporting_card = PythonOperator(
