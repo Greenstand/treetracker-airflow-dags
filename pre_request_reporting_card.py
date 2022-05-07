@@ -6,6 +6,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import psycopg2.extras
 from lib.contracts_earnings_fcc import contract_earnings_fcc
+from lib.pre_request import pre_request
 
 from lib.planter_entity import planter_entity
 from airflow.models import Variabl
