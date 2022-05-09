@@ -9,7 +9,7 @@ def pre_request(url):
     # request the url and print the response, catch any errors
     try:
         # set timeout to 60 seconds
-        response = requests.get(url, timeout=60)
+        response = requests.get(url, timeout=600)
         # print("response:", response)
         print("response.status_code:", response.status_code)
         # check the response status code, if not 200, raise an error
