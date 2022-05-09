@@ -41,6 +41,7 @@ with DAG(
     description='Rre-request the freetown map cluster',
     schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
+    max_active_runs=1,
     catchup=False,
     tags=['reporting', 'freetown'],
 ) as dag:
