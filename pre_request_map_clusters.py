@@ -54,7 +54,7 @@ with DAG(
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
         def request(begin_zoom_level, end_zoom_level, query_string):
-            for zoom_level in range(begin_zoom_level, end_zoom_level):
+            for zoom_level in range(begin_zoom_level, end_zoom_level + 1):
                 # url=http://treetracker-tile-server.tile-server.svc.cluster.local/${i}/1/1.png
                 url = f"http://treetracker-tile-server.tile-server.svc.cluster.local/{zoom_level}/1/1.png?{query_string}"
                 print(f"request: {url}")
