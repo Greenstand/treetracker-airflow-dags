@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
@@ -18,7 +18,7 @@ default_args = {
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 1,
+    'retries': 0,
     'retry_delay': timedelta(minutes=5),
     # 'schedule_interval': '@hourly',
     # 'queue': 'bash_queue',
@@ -53,10 +53,15 @@ with DAG(
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()  
         assign_new_trees_to_cluster(conn, True);
+    
+    assign_tree_task = PythonOperator(
+        task_id='assign_tree',
+        python_callable=assign_tree,
+    )
 
     t1 = BashOperator(
         task_id='print_date',
         bash_command='date',
     )
 
-    t1 >> assign_tree
+    t1 >> assign_tree_task
