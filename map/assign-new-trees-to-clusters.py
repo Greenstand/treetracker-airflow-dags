@@ -41,7 +41,7 @@ with DAG(
     default_args=default_args,
     description='earing_export version 1',
     schedule_interval= '@hourly',
-    start_date=days_ago(2),
+    start_date=datetime(2021, 1, 1),
     max_active_runs=1,
     catchup=False,
     tags=['map'],
