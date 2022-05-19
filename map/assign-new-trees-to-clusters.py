@@ -40,7 +40,7 @@ with DAG(
     'assign_tree_to_cluster',
     default_args=default_args,
     description='earing_export version 1',
-    schedule_interval= '@hourly',
+    # schedule_interval= '@none',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
     catchup=False,
@@ -67,4 +67,4 @@ with DAG(
     t1 >> assign_tree_task
 
 #version
-2022-05-19 14:52:53
+#2022-05-19 14:52:53
