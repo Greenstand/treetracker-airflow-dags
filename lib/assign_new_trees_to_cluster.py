@@ -44,7 +44,7 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
                 FROM trees
                 WHERE trees.active = true
                 AND trees.cluster_regions_assigned = false
-                LIMIT 1000
+                ---LIMIT 1000
             ) trees
             JOIN region
             ON ST_Contains( region.geom, trees.estimated_geometric_location)
@@ -55,6 +55,9 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
         # print("insertSQL:", insertSQL)
         cur.execute(insertSQL)
         print("SQL result:", cur.query)
+
+        print("time elapsed:", datetime.datetime.now() - start)
+        start = datetime.datetime.now()
 
         # update all trees that are assigned to cluster
         updateSQL = """
@@ -107,17 +110,17 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
         """
         cur.execute(deleteZoomLevelSQL)
 
-        # go through each row
-        for row in rows:
+        # go through each row with index
+        for index, row in enumerate(rows):
             insertSQL = """
                 INSERT INTO clusters (count, zoom_level, location) values (%s, %s, %s) RETURNING *
             """
             # execute sql
             cur.execute(insertSQL, (row[2], zoomLevel, row[1]))
 
-            # print every 1000 rows
-            if(cur.rowcount % 100 == 0):
-                print("inserted", cur.rowcount, "rows")
+            # print every 100 rows
+            if(index % 100 == 0):
+                print("inserted", index, "rows")
 
         # commit transaction
         if(dry_run == False):
