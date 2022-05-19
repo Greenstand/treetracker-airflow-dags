@@ -116,7 +116,7 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
             cur.execute(insertSQL, (row[2], zoomLevel, row[1]))
 
             # print every 1000 rows
-            if(cur.rowcount % 1000 == 0):
+            if(cur.rowcount % 100 == 0):
                 print("inserted", cur.rowcount, "rows")
 
         # commit transaction
