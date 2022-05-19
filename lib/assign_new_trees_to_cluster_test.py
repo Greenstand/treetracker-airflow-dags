@@ -18,3 +18,6 @@ class Test_AssignNewTreesToCluster(unittest.TestCase):
 if __name__ == '__main__':
     # Run the unit tests in the test suite with name 'Test_TestIncrementDecrement'
     unittest.main()
+
+#version
+2022-05-19 14:52:53
