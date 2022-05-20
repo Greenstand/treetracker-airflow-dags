@@ -58,6 +58,7 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
         # print("insertSQL:", insertSQL)
         cur.execute(insertSQL)
         print("SQL result:", cur.query)
+        print("inserted rows:", cur.rowcount)
 
         print("time elapsed:", datetime.datetime.now() - start)
         start = datetime.datetime.now()
@@ -73,6 +74,7 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
         # print("updateSQL:", updateSQL)
         cur.execute(updateSQL)
         print("SQL result:", cur.query)
+        print("updated rows:", cur.rowcount)
 
         # print time elapsed
         print("time elapsed:", datetime.datetime.now() - start)
