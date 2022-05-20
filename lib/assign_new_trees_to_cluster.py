@@ -1,5 +1,7 @@
 import datetime
 
+import psycopg2
+
 def assign_new_trees_to_cluster(conn, dry_run = True):
     print("assign new trees to cluster...")
 
@@ -32,7 +34,8 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
         # after this transaction is started, the job will be done in the
         # next round of schedule.
         conn.set_isolation_level(0)
-        cur.execute("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED")
+        # cur.execute("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED")
+        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_READ_COMMITTED)
 
         start = datetime.datetime.now()
         insertSQL = """
@@ -75,7 +78,7 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
         print("time elapsed:", datetime.datetime.now() - start)
         start = datetime.datetime.now()
 
-        print("update metiarialized views...")
+        print("update materialized views...")
         updateMaterializedViewSQL = """
             REFRESH MATERIALIZED VIEW CONCURRENTLY active_tree_region
         """
