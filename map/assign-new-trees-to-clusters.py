@@ -40,7 +40,8 @@ with DAG(
     'assign_tree_to_cluster',
     default_args=default_args,
     description='earing_export version 1',
-    # schedule_interval= '@none',
+    # schedule every 2 hours
+    schedule_interval='0 */2 * * *',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
     catchup=False,
