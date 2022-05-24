@@ -77,15 +77,18 @@ with DAG(
               ON planting_organization.id = planter.organization_id
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
-              LEFT JOIN region 
+              LEFT JOIN (
+                SELECT region.name, region.geom
+                FROM region
+                JOIN region_type
+                ON region_type.id = region.type_id
+                WHERE region_type.type = 'fcc_catchments'
+              ) region
               ON ST_WITHIN(trees.estimated_geometric_location, region.geom) 
-              LEFT JOIN region_type 
-              ON region_type.id = region.type_id
               WHERE trees.active = true
               AND planter_identifier IS NOT NULL
               AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178))
-              AND region_type.type = 'fcc_catchments'
-              --- AND trees.id = 827280 
+              AND trees.id = 827280 
               ;
             """);
             print("SQL result:", cursor.query)
