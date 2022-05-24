@@ -1,11 +1,14 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
 # Operators; we need this to operate!
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
+from lib.assign_new_trees_to_cluster import assign_new_trees_to_cluster
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
@@ -15,8 +18,9 @@ default_args = {
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 1,
+    'retries': 0,
     'retry_delay': timedelta(minutes=5),
+    # 'schedule_interval': '@hourly',
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -31,25 +35,37 @@ default_args = {
     # 'sla_miss_callback': yet_another_function,
     # 'trigger_rule': 'all_success'
 }
-dag = DAG(
-    'assign-new-captures-to-clusters',
+
+with DAG(
+    'assign_tree_to_cluster',
     default_args=default_args,
-    description='Assigns new tree captures to clusters in each zoom level',
-)
+    description='earing_export version 1',
+    # schedule every 2 hours
+    schedule_interval='0 */2 * * *',
+    start_date=datetime(2021, 1, 1),
+    max_active_runs=1,
+    catchup=False,
+    tags=['map'],
+) as dag:
 
-from types import SimpleNamespace
+    postgresConnId = "postgres_default"
+    def assign_tree(ds, **kwargs):
+        from lib.utils import print_time
+        db = PostgresHook(postgres_conn_id=postgresConnId)
+        conn = db.get_conn()  
+        assign_new_trees_to_cluster(conn, False);
+    
+    assign_tree_task = PythonOperator(
+        task_id='assign_tree',
+        python_callable=assign_tree,
+    )
 
-def allow_conf_testing(func):
-    def wrapper(*args, **kwargs):
-        if kwargs.get('test_mode', False):
-            kwargs['dag_run'] = SimpleNamespace(conf=kwargs.get('params', {}))
-        func(*args, **kwargs)
-    return wrapper
+    t1 = BashOperator(
+        task_id='print_date',
+        bash_command='date',
+    )
 
-t1 = BashOperator(
-    task_id='assign-new-captures-to-clusters',
-    bash_command='./scripts/assign-new-trees-to-clusters.sh',
-    dag=dag,
-)
+    t1 >> assign_tree_task
 
-
+#version
+#2022-05-20 14:49
