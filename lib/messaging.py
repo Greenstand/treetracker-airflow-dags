@@ -38,7 +38,8 @@ def create_authors(conn, DISABLE_ORGANIZATION_FILTER):
                                  "04600c41-edd8-405e-bb2b-59f26f69ef51", #fairtree
                                  "35e1c708-267b-4dd9-84be-868a954b0807", #thtp
                                  "ef98a6bd-9d69-4c75-b0f5-fdae60136291", #Greenstand
-                                 "723335ee-6266-4b64-9e1f-a1153d89658b" #ESEA
+                                 "723335ee-6266-4b64-9e1f-a1153d89658b", #ESEA
+                                  "2a34fa81-0683-4d25-94b9-24843ceec3c4" #Freetown
                                ] 
       for stakeholderId in approvedStakeholderIds:
           print (stakeholderId)
