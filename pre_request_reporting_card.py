@@ -1,26 +1,26 @@
 from datetime import datetime, timedelta
-
-# The DAG object; we'll need this to instantiate a DAG
+from textwrap import dedent
+from pprint import pprint
 from airflow import DAG
-# Operators; we need this to operate!
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.utils.dates import days_ago
-from lib.assign_new_trees_to_cluster import assign_new_trees_to_cluster
+import psycopg2.extras
+from lib.contracts_earnings_fcc import contract_earnings_fcc
+from lib.pre_request import pre_request
+
+from lib.planter_entity import planter_entity
+from airflow.models import Variable
+
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(2),
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
-    # 'schedule_interval': '@hourly',
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -35,37 +35,37 @@ default_args = {
     # 'sla_miss_callback': yet_another_function,
     # 'trigger_rule': 'all_success'
 }
-
 with DAG(
-    'assign_tree_to_cluster',
+    'pre_request_reporting_card',
     default_args=default_args,
-    description='earing_export version 1',
-    # schedule every 2 hours
-    schedule_interval='0 */2 * * *',
+    description='Rre-request the reporting card',
+    schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
     catchup=False,
-    tags=['map'],
+    tags=['reporting', 'freetown'],
 ) as dag:
-
-    postgresConnId = "postgres_default"
-    def assign_tree(ds, **kwargs):
-        from lib.utils import print_time
-        db = PostgresHook(postgres_conn_id=postgresConnId)
-        conn = db.get_conn()  
-        assign_new_trees_to_cluster(conn, False);
-    
-    assign_tree_task = PythonOperator(
-        task_id='assign_tree',
-        python_callable=assign_tree,
-    )
 
     t1 = BashOperator(
         task_id='print_date',
         bash_command='date',
     )
 
-    t1 >> assign_tree_task
+    def pre_request_job(ds, **kwargs):
+        print("do pre request job:")
+        K8S_DOMAIN = Variable.get("K8S_DOMAIN")
+        # check if CKAN_DOMAIN exists
+        assert K8S_DOMAIN is not None
+        date = datetime.now().strftime("%Y-%m-%d")
+        # https://dev-k8s.treetracker.org/reporting/capture/statistics?capture_created_start_date=1970-01-01&capture_created_end_date=2022-05-07
+        url = f"https://{K8S_DOMAIN}/reporting/capture/statistics?capture_created_start_date=1970-01-01&capture_created_end_date={date}"
+        print(url)
+        pre_request(url)
+        return 1
 
-#version
-#2022-05-20 15:59
+    pre_request_reporting_card = PythonOperator(
+        task_id='pre_request_reporting_card',
+        python_callable=pre_request_job,
+        )
+
+    pre_request_reporting_card >> t1

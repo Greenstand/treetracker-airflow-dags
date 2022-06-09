@@ -1,15 +1,15 @@
-# updated at Tue May 31 2022 09:37:26 GMT+0800
 from datetime import datetime, timedelta
 from textwrap import dedent
 from pprint import pprint
 from airflow import DAG
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.models import Variable
 import psycopg2.extras
-from lib.messaging import create_authors
+from lib.contracts_earnings_fcc import contract_earnings_fcc
+from lib.pre_request import pre_request
+
+from lib.planter_entity import planter_entity
+from airflow.models import Variable
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -36,13 +36,14 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'create-authors',
+    'pre_request_map_clusters',
     default_args=default_args,
-    description='Create messaging system users for approved organizations',
-    schedule_interval='@hourly',
+    description='Rre-request the freetown map cluster',
+    schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
+    max_active_runs=1,
     catchup=False,
-    tags=['messaging'],
+    tags=['reporting', 'freetown'],
 ) as dag:
 
     t1 = BashOperator(
@@ -50,20 +51,23 @@ with DAG(
         bash_command='date',
     )
 
-    postgresConnId = "postgres_default"
-
-    def create_authors_wrap(ds, **kwargs):
-        DISABLE_ORGANIZATION_FILTER = Variable.get("AUTHOR_CREATION_DISABLE_ORGANIZATION_FILTER", default_var=None)
-        db = PostgresHook(postgres_conn_id=postgresConnId)
-        conn = db.get_conn()  
-        create_authors(conn, DISABLE_ORGANIZATION_FILTER)
+    def pre_request_job(ds, **kwargs):
+        print("do pre request job:")
+        def request(begin_zoom_level, end_zoom_level, query_string):
+            for zoom_level in range(begin_zoom_level, end_zoom_level + 1):
+                # url=http://treetracker-tile-server.tile-server.svc.cluster.local/${i}/1/1.png
+                url = f"http://treetracker-tile-server.tile-server.svc.cluster.local/{zoom_level}/1/1.png?{query_string}"
+                print(f"request: {url}")
+                begin_time = datetime.now()
+                pre_request(url)
+                end_time = datetime.now()
+                print(f"request: took {end_time - begin_time}")
+        request(2,15, "map_name=freetown")
         return 1
 
-    create_authors_task = PythonOperator(
-        task_id='create_authors',
-        python_callable=create_authors_wrap,
+    pre_request_map_cluster = PythonOperator(
+        task_id='pre_request_map_cluster',
+        python_callable=pre_request_job,
         )
 
-    create_authors_task >> t1
-
-    
+    pre_request_map_cluster >> t1

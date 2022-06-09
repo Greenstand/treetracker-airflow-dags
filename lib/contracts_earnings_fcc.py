@@ -143,7 +143,7 @@ def contract_earnings_fcc(conn):
   cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
   try:
       cursor.execute("""
-        SELECT * FROM stakeholder.fcc_tiered_configuration ftc 
+        SELECT * FROM contracts.fcc_tiered_configuration ftc 
         WHERE
           active = TRUE
       """);
