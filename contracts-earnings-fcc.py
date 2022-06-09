@@ -1,3 +1,4 @@
+# version Thu Jun  9 09:38:02 CST 2022
 from datetime import datetime, timedelta
 from textwrap import dedent
 from pprint import pprint
@@ -10,6 +11,7 @@ import psycopg2.extras
 from lib.contracts_earnings_fcc import contract_earnings_fcc
 
 from lib.planter_entity import planter_entity
+from lib.sync_entity_stakeholder import sync_entity_stakeholder
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -66,6 +68,13 @@ with DAG(
         contract_earnings_fcc(conn)
         return 1
 
+    def sync_entity_stakeholder_task_function(ds, **kwargs):
+        db = PostgresHook(postgres_conn_id=postgresConnId)
+        conn = db.get_conn()
+        print("db:", conn)
+        sync_entity_stakeholder(conn, dry_run=False)
+        return 1
+
     create_new_person_records = PythonOperator(
         task_id='create_new_person_records',
         python_callable=create_new_person_records,
@@ -76,5 +85,9 @@ with DAG(
         python_callable=earnings_report,
         )
 
+    sync_entity_stakeholder_task = PythonOperator(
+        task_id='sync_entity_stakeholder_task',
+        python_callable=sync_entity_stakeholder_task_function,
+    )
 
-    create_new_person_records >> earnings_report >> t1
+    create_new_person_records >> sync_entity_stakeholder_task >> earnings_report >> t1
