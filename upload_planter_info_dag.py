@@ -37,13 +37,13 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'earing_export',
+    'upload_planter_info',
     default_args=default_args,
-    description='earing_export version 1',
+    description='ftp',
     schedule_interval='@daily',
     start_date=days_ago(2),
     catchup=False,
-    tags=['CKAN', 'freetown'],
+    tags=['ftp', 'greenstand'],
 ) as dag:
 
     t1 = BashOperator(
