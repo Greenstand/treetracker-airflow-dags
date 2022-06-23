@@ -110,7 +110,7 @@ with DAG(
                    planting_organization_uuid, planting_organization_name,
                    species, catchment, gender )
                   values
-                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                   RETURNING *
                 """, ( 
                 row['capture_uuid'], row['planter_first_name'], row['planter_last_name'], row['planter_identifier'],
