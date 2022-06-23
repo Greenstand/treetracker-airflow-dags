@@ -10,7 +10,6 @@ def upload_planter_info(conn, host, user, password, dry_run = True):
     print("user:", user)
     # replace the password with stars
     print("password:", "*" * len(password))
-    print("password:", password)
 
     # check host and user
     if host is None or user is None or password is None:
