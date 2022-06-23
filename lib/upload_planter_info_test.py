@@ -15,7 +15,7 @@ class Test_AssignNewTreesToCluster(unittest.TestCase):
         host = os.environ['FTP_HOST']
         user = os.environ['FTP_USER']
         password = os.environ['FTP_PASSWORD']
-        upload_planter_info(conn, host, user, password, True);
+        upload_planter_info(conn, host, user, password, False);
 
 if __name__ == '__main__':
     # Run the unit tests in the test suite with name 'Test_TestIncrementDecrement'
