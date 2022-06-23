@@ -68,7 +68,7 @@ with DAG(
             FTP_HOST,
             FTP_USER,
             FTP_PASSWORD,
-            True
+            False
           )
           return 0
       except Exception as e:
