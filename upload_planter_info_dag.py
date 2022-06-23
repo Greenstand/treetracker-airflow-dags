@@ -62,7 +62,7 @@ with DAG(
           print("date:", date)
           FTP_HOST = Variable.get("FTP_HOST")
           FTP_USER = Variable.get("FTP_USER")
-          FTP_PASSWORD = Variable.get("FTP_PASSWORD")
+          FTP_PASSWORD = Variable.get("FTP_PPP")
           lib.upload_planter_info.upload_planter_info(
             conn, 
             FTP_HOST,
