@@ -5,6 +5,18 @@ import psycopg2
 def upload_planter_info(conn, host, user, password, dry_run = True):
     print("dump planter info and upload...")
 
+    # print host, user, password
+    print("host:", host)
+    print("user:", user)
+    # replace the password with stars
+    print("password:", "*" * len(password))
+
+    # check host and user
+    if host is None or user is None or password is None:
+        print("host or user is None")
+        return
+    
+
     # assign current time to variable
     very_start = datetime.datetime.now()
 
