@@ -22,11 +22,19 @@ def upload_planter_info(conn, host, user, password, dry_run = True):
 
     # execute query
     cur = conn.cursor()
+    # cur.execute("""
+    #     SELECT p.id, p.first_name, p.last_name, count(t.id), p.organization_id, p.image_url
+    #     FROM public.trees t join planter p on t.planter_id = p.id
+    #     WHERE p.organization_id in (select entity_id from getEntityRelationshipChildren(178))
+    #     group by p.id order by count(t.id) desc;
+    # """)
     cur.execute("""
-        SELECT p.id, p.first_name, p.last_name, count(t.id), p.organization_id, p.image_url
-        FROM public.trees t join planter p on t.planter_id = p.id
+        SELECT p.id, p.first_name, p.last_name, count(t.id), e.name, p.organization_id, p.image_url
+        FROM public.trees t
+        join planter p on t.planter_id = p.id
+        join entity e on p.organization_id = e.id
         WHERE p.organization_id in (select entity_id from getEntityRelationshipChildren(178))
-        group by p.id order by count(t.id) desc;
+        group by p.id,e.name order by count(t.id) desc;
     """)
     print("SQL result:", cur.query)
     # get result
@@ -34,9 +42,9 @@ def upload_planter_info(conn, host, user, password, dry_run = True):
     print("planter count:", len(planter))
 
     # compose csv 
-    csv = "id,first_name,last_name,tree_count,organization_id,image_url\n"
+    csv = "id,first_name,last_name,tree_count,name, organization_id,image_url\n"
     for p in planter:
-        csv += "%s,%s,%s,%s,%s,%s\n" % (p[0], p[1], p[2], p[3], p[4], p[5])
+        csv += "%s,%s,%s,%s,%s,%s,%s\n" % (p[0], p[1], p[2], p[3], p[4], p[5], p[6])
     print("csv:", csv)
 
     import io
