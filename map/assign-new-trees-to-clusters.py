@@ -51,11 +51,7 @@ with DAG(
     postgresConnId = "postgres_default"
     def assign_tree(ds, **kwargs):
         from lib.utils import print_time
-        # get the db and set the keepalive idle
-
         db = PostgresHook(postgres_conn_id=postgresConnId, keepalives_idle=30)
-        db = PostgresHook(postgresConnId, ).get_conn()
-
         conn = db.get_conn()  
         assign_new_trees_to_cluster(conn, False);
     
