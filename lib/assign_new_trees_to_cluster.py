@@ -60,9 +60,9 @@ def assign_new_trees_to_cluster(conn):
         print("SQL result:", cur.query)
         print("inserted rows:", cur.rowcount)
         # quit if rows inserted is 0
-        if cur.rowcount == 0:
-            print("no tree needs to assign to cluster")
-            return
+        # if cur.rowcount == 0:
+        #     print("no tree needs to assign to cluster")
+        #     return
 
         print("time elapsed:", datetime.datetime.now() - start)
         start = datetime.datetime.now()
