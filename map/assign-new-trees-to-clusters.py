@@ -53,7 +53,7 @@ with DAG(
         from lib.utils import print_time
         db = PostgresHook(postgres_conn_id=postgresConnId, keepalives_idle=30)
         conn = db.get_conn()  
-        assign_new_trees_to_cluster(conn, False);
+        assign_new_trees_to_cluster(conn);
     
     assign_tree_task = PythonOperator(
         task_id='assign_tree',
@@ -68,4 +68,4 @@ with DAG(
     t1 >> assign_tree_task
 
 #version
-#2022-05-20 15:59
+#Tue Jun 28 10:37:54 CST 2022
