@@ -21,9 +21,9 @@ def assign_new_trees_to_cluster(conn):
     # get result
     count = cur.fetchone()[0]
     print("count of tree that needs to assign to cluster:", count)
-    # if(count == 0):
-    #     print("no tree needs to assign to cluster")
-    #     return
+    if(count == 0):
+        print("no tree needs to assign to cluster")
+        return
 
     # try/except block to catch errors
     try:
