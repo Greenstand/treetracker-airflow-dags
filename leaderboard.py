@@ -1,31 +1,16 @@
-# Import the PostgreSQL library
+import sys
 import psycopg2
-
-# Import database connection settings
-from config import config
-
-# Connect to TreeTracker Database and return connection object
-def connect():
-    
-    conn = None
-    try:
-        # read connection parameters
-        params = config()
-
-        # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
-        
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-
-    return conn
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 # Create the LeaderBoard
 def getLeaderBoard(region):
 
     # Connect to TreeTracker Database
-    conn = connect()
+    postgresConnId = "postgres_default"
+    db = PostgresHook(postgres_conn_id=postgresConnId)
+    conn = db.get_conn() 
 
     regionName = ''
 
@@ -128,4 +113,15 @@ def getLeaderBoard(region):
     # Return the list of country objects
     return leading_countries
 
-getLeaderBoard('')
+
+
+# Pass the region name as a command line argument and if it is blank set the region  to blank
+# and just pull the top 10 countries.
+# Example python3 leaderboard.py 'United States'
+
+try:
+    region = sys.argv[1]
+except:
+    region = ''
+
+getLeaderBoard(region)
