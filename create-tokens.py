@@ -58,10 +58,12 @@ with DAG(
         walletName = kwargs['dag_run'].conf.get('walletName')    
         entityId = kwargs['dag_run'].conf.get('entityId')    
         dryRun = kwargs['dag_run'].conf.get('dryRun')    
+        mintLimit = kwards['dag_run'].conf.get('mintLimit')
         # print them out
         print('walletName:', walletName)
         print('entityId:', entityId)
         print('dryRun:', dryRun)
+        print('mintLimit:', mintLimit)
         # check if wallet exists
         if walletName is None:
             print('walletName is None')
@@ -72,7 +74,10 @@ with DAG(
         if dryRun is None:
             print('dryRun is None')
             return
-
+         if mintLimit is None:
+            print('mintLimit is None')
+            return
+        
         result = 'pending'
         db = PostgresHook(postgres_conn_id='postgres_default')
         connection = db.get_conn()
@@ -108,15 +113,15 @@ with DAG(
                             AND active = true 
                             AND approved = true 
                             AND token_id IS NULL 
-                            LIMIT 3000
+                            LIMIT .format(mintLimit)
                     """.format(entityId))
                 trees = cursor.fetchall()
                 
                 print('Trees found', len(trees))
                 
-                # check trees length < 3000
-                if len(trees) < 3000:
-                    print('Not more trees')
+                # check trees length < mintLimit
+                if len(trees) < mintLimit:
+                    print('Less tokens than the mintLimit will be minted')
                     remaining = False
                 
                 # for each tree, create a token
