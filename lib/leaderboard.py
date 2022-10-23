@@ -1,16 +1,20 @@
-import sys
-import psycopg2
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
+import psycopg
+import os
+import json
+from dotenv import load_dotenv
+
+# Used for the database connection local environment variable 
+load_dotenv()
 
 
-# Create the LeaderBoard
-def getLeaderBoard(region):
+def getLeaderBoard(region, conn):
+    ''' Get the top 10 countries that have planted the most trees from the treetracker database 
+    and return a list of dictionary objects with the country details. 
+    The region parameter will return the countries by region, if it is blank it will return the countries from all over 
+    the world. The conn parameter is the database connection information.'''
 
-    # Connect to TreeTracker Database
-    postgresConnId = "postgres_default"
-    db = PostgresHook(postgres_conn_id=postgresConnId)
-    conn = db.get_conn() 
+    # Connection informaiton to the TreeTracker Database
+    conn = conn
 
     regionName = ''
 
@@ -73,7 +77,7 @@ def getLeaderBoard(region):
         on r.id = region.id'''.format(regionName,limit)
 
     try:
-        # Setup the cursor to execute select statements
+        # Setup the cursor to execute SQL statements
         cur = conn.cursor()
 
         # Execute the SQL statement
@@ -82,20 +86,20 @@ def getLeaderBoard(region):
         # Get the first country
         row = cur.fetchone()
 
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, psycopg.DatabaseError) as error:
         print(error)
 
 
-    # List of dictionary objects to return
+    # Create a list to hold the leading countries in JSON format
     leading_countries = []
 
     # Dictionary key values
-    keys = ['planted', 'id', 'name', 'centriod']
+    keys = ["planted", "id", "name", "centriod"]
 
     # Dictionary object that holds the country's information using keys above
     country = {}
 
-    # Create the dictionary object and append it to a list
+    # Create the dictionary object (that will later be formated as JSON) and append it to a list
     while row is not None:
         index = 0
         for column in row:
@@ -104,9 +108,6 @@ def getLeaderBoard(region):
         leading_countries.append(country.copy())
         row = cur.fetchone()
 
-    for item in leading_countries:
-        print(item)
-
     # Close database connection
     conn.close()
 
@@ -114,14 +115,53 @@ def getLeaderBoard(region):
     return leading_countries
 
 
+def insertLeaderBoard(leading_countries, conn):
+    ''' Take the results from getLeaderBoard and insert that data into the Web.Config 
+    database. 
+    The leading_countries parameter is the list of dictionary objects from getLeaderBoard.
+    The conn parameter is the database connection information.'''
 
-# Pass the region name as a command line argument and if it is blank set the region  to blank
-# and just pull the top 10 countries.
-# Example python3 leaderboard.py 'United States'
+    # Step one is to clean up the databse by deleting the old country leader board data.
+    sql_data_delete = ''' delete from webmap.config 
+                        where name = 'country-leader-board' '''
+    try:
+        # Setup the cursor to execute SQL statements
+        cur = conn.cursor()
 
-try:
-    region = sys.argv[1]
-except:
-    region = ''
+        # Execute the SQL statement
+        cur.execute(sql_data_delete)
+        conn.commit()
 
-getLeaderBoard(region)
+    except (Exception, psycopg.DatabaseError) as error:
+        print(error)
+
+    # Next, insert the updated leaderboard data
+    sql_data_insert = ''' insert into webmap.config(name,data)
+                        values('country-leader-board', %s) '''
+
+    try:
+        for row in leading_countries:
+            json_string = json.dumps(row)
+            cur.execute(sql_data_insert, (json_string,))
+
+        conn.commit()
+
+    except (Exception, psycopg.DatabaseError) as error:
+        print(error)
+
+    finally:
+        cur.close()
+
+
+if __name__ == '__main__':
+
+    # Get the local environment variable holding the database connection information.
+    DB_URL = os.environ.get('DB_URL')
+
+    # Get the countries from the TreeTracker Database
+    with psycopg.connect(DB_URL) as conn:
+        leading_countries = getLeaderBoard('', conn)
+
+    # Insert the countries into the Web.Config Database
+    with psycopg.connect(DB_URL) as conn:
+        insertLeaderBoard(leading_countries, conn)
