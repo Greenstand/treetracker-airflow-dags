@@ -3,11 +3,10 @@ import psycopg2
 import requests
 
 
-def refresh_country_leader_board(conn, env):
+def refresh_country_leader_board(conn, K8S_DOMAIN):
   # check env
-  if env != 'dev' and env != 'prod' and env != 'test':
-    print ("env must be dev or prod or test")
-    return False
+  if K8S_DOMAIN is None:
+    raise Exception("K8S_DOMAIN is not defined")
 
   print ("refresh_leader_board")
   # Step one is to clean up the databse by deleting the old country leader board data.
@@ -42,7 +41,7 @@ def refresh_country_leader_board(conn, env):
 
   for continent in continents:
     # get the data from the API
-    url = "https://" + env + "-k8s.treetracker.org/query/countries/leaderboard?continent=" + continent
+    url = "https://" + K8S_DOMAIN + "/query/countries/leaderboard?continent=" + continent
     print ("url:", url)
     response = requests.get(url)
     data = response.json()
