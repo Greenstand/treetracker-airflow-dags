@@ -59,9 +59,9 @@ with DAG(
       conn = db.get_conn()  
       try:
 
-        ENV = Variable.get("EXEC_ENV")
-        assert ENV
-        refresh_country_leader_board(conn, ENV)
+        K8S_DOMAIN = Variable.get("K8S_DOMAIN")
+        assert K8S_DOMAIN
+        refresh_country_leader_board(conn, K8S_DOMAIN)
         return 0
       except Exception as e:
           print("get error when export:", e)
