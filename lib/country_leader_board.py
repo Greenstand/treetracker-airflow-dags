@@ -7,10 +7,14 @@ def refresh_country_leader_board(conn):
   # check env
   continents = [
     'Global',
-    'Africa',
-    'Americas',
-    'Asia',
     'Oceania',
+    'South America',
+    'Africa',
+    'Antarctica',
+    'Australia',
+    'Asia',
+    'Europe',
+    'North America'
   ]
   # Limit the number of rows returned
   limit = 10
