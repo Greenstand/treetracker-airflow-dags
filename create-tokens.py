@@ -58,7 +58,7 @@ with DAG(
         walletName = kwargs['dag_run'].conf.get('walletName')    
         entityId = kwargs['dag_run'].conf.get('entityId')    
         dryRun = kwargs['dag_run'].conf.get('dryRun')    
-        mintLimit = kwards['dag_run'].conf.get('mintLimit')
+        mintLimit = kwargs['dag_run'].conf.get('mintLimit')
         # print them out
         print('walletName:', walletName)
         print('entityId:', entityId)
