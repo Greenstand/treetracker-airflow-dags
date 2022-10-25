@@ -27,7 +27,7 @@ class Test_Country_Leader_Board(unittest.TestCase):
             "CKAN_API_KEY": CKAN_API_KEY,
         }
         # execute capture_export.capture_export(conn, '2020-12') should throw an error
-        result = refresh_country_leader_board(conn, 'dev-k8s.treetracker.org')
+        result = refresh_country_leader_board(conn)
         # use unittest to check the result
         self.assertTrue(result)
 
