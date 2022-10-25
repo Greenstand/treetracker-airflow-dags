@@ -113,8 +113,8 @@ with DAG(
                             AND active = true 
                             AND approved = true 
                             AND token_id IS NULL 
-                            LIMIT .format(mintLimit)
-                    """.format(entityId))
+                            LIMIT {}
+                                """.format(entityId, mintLimit))
                 trees = cursor.fetchall()
                 
                 print('Trees found', len(trees))
