@@ -39,7 +39,7 @@ default_args = {
 with DAG(
     'refresh_country_leader_board',
     default_args=default_args,
-    description='refresh country leader boardversion 1',
+    description='refresh country leader board version 2',
     schedule_interval="@daily",
     start_date=days_ago(2),
     catchup=False,
