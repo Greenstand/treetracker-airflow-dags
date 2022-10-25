@@ -58,10 +58,7 @@ with DAG(
       db = PostgresHook(postgres_conn_id=postgresConnId)
       conn = db.get_conn()  
       try:
-
-        K8S_DOMAIN = Variable.get("K8S_DOMAIN")
-        assert K8S_DOMAIN
-        refresh_country_leader_board(conn, K8S_DOMAIN)
+        refresh_country_leader_board(conn)
         return 0
       except Exception as e:
           print("get error when export:", e)
