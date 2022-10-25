@@ -61,6 +61,7 @@ with DAG(
               planter.first_name AS planter_first_name,
               planter.last_name AS planter_last_name,
               planter.phone AS planter_identifier,
+              planter.gender AS gender,
               trees.time_created AS capture_created_at,
               trees.note AS note,
               trees.lat AS lat,
@@ -107,16 +108,16 @@ with DAG(
                   (capture_uuid, planter_first_name, planter_last_name, planter_identifier,
                    capture_created_at, lat, lon, note, approved, 
                    planting_organization_uuid, planting_organization_name,
-                   species, catchment )
+                   species, catchment, gender )
                   values
-                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                   RETURNING *
                 """, ( 
                 row['capture_uuid'], row['planter_first_name'], row['planter_last_name'], row['planter_identifier'],
                 row['capture_created_at'], row['lat'], row['lon'], row['note'], row['approved'],
                 row['planting_organization_uuid'], row['planting_organization_name'], 
                 row['species'],
-                row['catchment']
+                row['catchment'], row['gender']
                 ) );
 
             conn.commit()
