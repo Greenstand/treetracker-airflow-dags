@@ -23,9 +23,9 @@ default_args = {
 }
 
 with DAG(
-    dag_id='refresh_material_view',
+    dag_id='refresh_webmap_db_org_location_view',
     default_args=default_args,
-    description='Refresh the material views in the webmap database.',
+    description='Refresh the material view in the webmap database.',
     schedule_interval="@daily",
     start_date=days_ago(2),
     catchup=False,
