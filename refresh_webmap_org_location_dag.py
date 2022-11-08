@@ -37,7 +37,6 @@ with DAG(
         postgresConnId = "postgres_default"
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()
-        print('Connected to database')
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
 
@@ -60,12 +59,7 @@ with DAG(
 
     task = PythonOperator(
         task_id='refresh_webmap_organization_location',
-        python_callable=view_refresh,
+        python_callable=view_refresh(conn),
     )
 
     task
-
-    print('Webmap Organization Location Refreshed')
-
-
-
