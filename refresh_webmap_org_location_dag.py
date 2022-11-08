@@ -32,16 +32,14 @@ with DAG(
     tags=['webmap'],
 ) as dag:
 
-    # Connect to the TreeTracker Database
-    try:
-        postgresConnId = "postgres_default"
-        db = PostgresHook(postgres_conn_id=postgresConnId)
-        conn = db.get_conn()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+    postgresConnId = "postgres_default"
 
     # Python function to refresh the views
-    def view_refresh(conn):
+    def view_refresh(ds, **kwargs):
+        
+        db = PostgresHook(postgres_conn_id=postgresConnId)
+        conn = db.get_conn()
+        
         sql = 'REFRESH MATERIALIZED VIEW webmap.organization_location'
 
         try:
@@ -59,7 +57,7 @@ with DAG(
 
     task = PythonOperator(
         task_id='refresh_webmap_organization_location',
-        python_callable=view_refresh(conn),
+        python_callable=view_refresh,
     )
 
     task
