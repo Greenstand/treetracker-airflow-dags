@@ -38,12 +38,12 @@ default_args = {
 with DAG(
     'pre_request_map_clusters',
     default_args=default_args,
-    description='Rre-request the freetown map cluster',
+    description='Rre-request the all map cluster version 2',
     schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
     catchup=False,
-    tags=['reporting', 'freetown'],
+    tags=['reporting', 'map'],
 ) as dag:
 
     t1 = BashOperator(
@@ -56,9 +56,10 @@ with DAG(
         pre_request_map_cluster("http://treetracker-tile-server.tile-server.svc.cluster.local")
         return 1
 
-    pre_request_map_cluster = PythonOperator(
+    pre_request_map_cluster_job = PythonOperator(
         task_id='pre_request_map_cluster',
         python_callable=pre_request_job,
         )
 
-    pre_request_map_cluster >> t1
+    pre_request_map_cluster_job >> t1
+
