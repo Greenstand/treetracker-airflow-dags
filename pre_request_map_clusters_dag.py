@@ -10,6 +10,7 @@ from lib.pre_request import pre_request
 
 from lib.planter_entity import planter_entity
 from airflow.models import Variable
+from lib.pre_request_map_clusters import pre_request_map_clusters
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -53,7 +54,7 @@ with DAG(
 
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
-        pre_request_map_cluster("http://treetracker-tile-server.tile-server.svc.cluster.local")
+        pre_request_map_clusters("http://treetracker-tile-server.tile-server.svc.cluster.local")
         return 1
 
     pre_request_map_cluster_job = PythonOperator(
