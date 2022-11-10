@@ -53,16 +53,7 @@ with DAG(
 
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
-        def request(begin_zoom_level, end_zoom_level, query_string):
-            for zoom_level in range(begin_zoom_level, end_zoom_level + 1):
-                # url=http://treetracker-tile-server.tile-server.svc.cluster.local/${i}/1/1.png
-                url = f"http://treetracker-tile-server.tile-server.svc.cluster.local/{zoom_level}/1/1.png?{query_string}"
-                print(f"request: {url}")
-                begin_time = datetime.now()
-                pre_request(url)
-                end_time = datetime.now()
-                print(f"request: took {end_time - begin_time}")
-        request(2,15, "map_name=freetown")
+        pre_request_map_cluster("http://treetracker-tile-server.tile-server.svc.cluster.local")
         return 1
 
     pre_request_map_cluster = PythonOperator(
