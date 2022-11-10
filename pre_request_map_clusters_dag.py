@@ -10,6 +10,7 @@ from lib.pre_request import pre_request
 
 from lib.planter_entity import planter_entity
 from airflow.models import Variable
+from lib.pre_request_map_clusters import pre_request_map_clusters
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -38,12 +39,12 @@ default_args = {
 with DAG(
     'pre_request_map_clusters',
     default_args=default_args,
-    description='Rre-request the freetown map cluster',
+    description='Rre-request the all map cluster version 2',
     schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
     catchup=False,
-    tags=['reporting', 'freetown'],
+    tags=['reporting', 'map'],
 ) as dag:
 
     t1 = BashOperator(
@@ -53,21 +54,13 @@ with DAG(
 
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
-        def request(begin_zoom_level, end_zoom_level, query_string):
-            for zoom_level in range(begin_zoom_level, end_zoom_level + 1):
-                # url=http://treetracker-tile-server.tile-server.svc.cluster.local/${i}/1/1.png
-                url = f"http://treetracker-tile-server.tile-server.svc.cluster.local/{zoom_level}/1/1.png?{query_string}"
-                print(f"request: {url}")
-                begin_time = datetime.now()
-                pre_request(url)
-                end_time = datetime.now()
-                print(f"request: took {end_time - begin_time}")
-        request(2,15, "map_name=freetown")
+        pre_request_map_clusters("http://treetracker-tile-server.tile-server.svc.cluster.local")
         return 1
 
-    pre_request_map_cluster = PythonOperator(
+    pre_request_map_cluster_job = PythonOperator(
         task_id='pre_request_map_cluster',
         python_callable=pre_request_job,
         )
 
-    pre_request_map_cluster >> t1
+    pre_request_map_cluster_job >> t1
+
