@@ -41,27 +41,27 @@ with DAG(
     tags=['migration'],
 ) as dag:
 
-t1 = BashOperator(
-    task_id='print_date',
-    bash_command='date',
-)
+    t1 = BashOperator(
+        task_id='print_date',
+        bash_command='date',
+    )
 
-postgresConnId = "postgres_default"
-db = PostgresHook(postgres_conn_id=postgresConnId)
-conn = db.get_conn()  
+    postgresConnId = "postgres_default"
+    db = PostgresHook(postgres_conn_id=postgresConnId)
+    conn = db.get_conn()  
 
-t2 = DockerOperator(
-    task_id='migrate_devices',
-    image='greenstand/domain-migration-scripts:1.0.0',
-    api_version='auto',
-    auto_remove=True,
-    environment={
-    'DATABASE_URL': conn
-    },
-    command='npm run migrate-devices',
-    docker_url='unix://var/run/docker.sock',
-    network_mode='bridge'
-)
+    t2 = DockerOperator(
+        task_id='migrate_devices',
+        image='greenstand/domain-migration-scripts:1.0.0',
+        api_version='auto',
+        auto_remove=True,
+        environment={
+        'DATABASE_URL': conn
+        },
+        command='npm run migrate-devices',
+        docker_url='unix://var/run/docker.sock',
+        network_mode='bridge'
+    )
 
 
-t2 >> t1
+    t2 >> t1
