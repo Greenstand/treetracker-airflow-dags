@@ -6,6 +6,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.docker_operator import DockerOperator
+from airflow.utils.dates import days_ago
 import psycopg2.extras
 
 # These args will get passed on to each operator
@@ -37,6 +38,7 @@ with DAG(
     default_args=default_args,
     description='Migrate regions from the legacy db, kindly update the where statement in the repository to specify which regions to be migrated. https://github.com/Greenstand/domain-migration-scripts/blob/main/v1Tov2Migrations/migrate_regions.js',
     schedule_interval= None,
+    start_date=days_ago(2),
     catchup=False,
     tags=['migration'],
 ) as dag:
