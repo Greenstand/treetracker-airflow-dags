@@ -39,7 +39,7 @@ default_args = {
 with DAG(
     'pre_request_map_clusters',
     default_args=default_args,
-    description='Rre-request the all map cluster version 2',
+    description='Rre-request the all map cluster version 2.1',
     schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
