@@ -16,5 +16,8 @@ def pre_request_map_clusters(url_prefix):
           pre_request(url)
           end_time = datetime.now()
           print(f"request: took {end_time - begin_time}")
+  request(2,15, "")
   request(2,15, "map_name=freetown")
   request(2,15, "map_name=fccphase1")
+  request(2,15, "map_name=TheHaitiTreeProject")
+  request(2,15, "wallet=FinorX")
