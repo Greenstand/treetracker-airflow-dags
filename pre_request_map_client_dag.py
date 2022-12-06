@@ -20,7 +20,7 @@ default_args = {
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 10,
+    'retries': 20,
     'retry_delay': timedelta(seconds=1),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
