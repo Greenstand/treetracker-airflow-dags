@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from textwrap import dedent
 from pprint import pprint
+import time
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
@@ -20,7 +21,7 @@ default_args = {
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 10,
+    'retries': 20,
     'retry_delay': timedelta(seconds=1),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
@@ -90,6 +91,8 @@ with DAG(
             pre_request(urlreal)
             end_time = datetime.now()
             print(f"request: took {end_time - begin_time}")
+            # sleep for 1 minute
+            time.sleep(60)
 
     pre_request_map_cluster_job = PythonOperator(
         task_id='pre_request_map_client',
