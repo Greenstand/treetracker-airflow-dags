@@ -50,7 +50,7 @@ with DAG(
 
     postgresConnId = "postgres_default"
     db = PostgresHook(postgres_conn_id=postgresConnId)
-    conn = db.get_conn()  
+    conn = db.get_uri()  
 
     t2 = DockerOperator(
         task_id='migrate_devices',
