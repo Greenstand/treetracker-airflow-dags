@@ -29,5 +29,4 @@ def pre_request_map_clusters(url_prefix):
   request(2,15, "map_name=piesces")
   request(2,15, "map_name=leadfoundation")
   request(2,15, "wallet=FinorX")
-  request(2,15, "map_name=fccphase1")
   
