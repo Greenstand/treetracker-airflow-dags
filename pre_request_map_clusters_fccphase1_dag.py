@@ -37,7 +37,7 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'pre_request_map_clusters',
+    'pre_request_map_clusters_fccphase1',
     default_args=default_args,
     description='Rre-request the all map cluster fccphase1 version 1',
     schedule_interval= '*/5 * * * *',
