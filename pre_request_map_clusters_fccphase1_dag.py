@@ -63,7 +63,7 @@ with DAG(
                 pre_request(url)
                 end_time = datetime.now()
                 print(f"request: took {end_time - begin_time}")
-        request(2,15, "map_name=fccphase1")
+        request(2,15, "map_name=fcctrees")
         return 1
 
     pre_request_map_cluster_job = PythonOperator(

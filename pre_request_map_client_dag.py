@@ -58,7 +58,7 @@ with DAG(
         prefix = "http://treetracker-web-map-client-beta-ambassador-svc.webmap.svc.cluster.local"
         urls = [
             "/top", 
-            "/organizations/fccphase1",
+            "/organizations/fcctrees",
             "/organizations/1642",
             "/organizations/freetown",
             "/organizations/178",
