@@ -38,7 +38,7 @@ with DAG(
     default_args=default_args,
     description='Migrate devices from legacy db',
     schedule_interval= None,
-    start_date=days_ago(2),
+    start_date=days_ago(7),
     catchup=False,
     tags=['migration'],
 ) as dag:
