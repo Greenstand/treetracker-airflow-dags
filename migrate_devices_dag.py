@@ -19,7 +19,6 @@ default_args = {
     'email_on_retry': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
-    'start_date'=days_ago(7),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -39,6 +38,7 @@ with DAG(
     default_args=default_args,
     description='Migrate devices from legacy db',
     schedule_interval= None,
+    start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['migration'],
 ) as dag:
