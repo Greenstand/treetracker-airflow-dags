@@ -126,7 +126,6 @@ with DAG(
             print("get error when exec SQL:", e)
             print("SQL result:", updateCursor.query)
             raise ValueError('Error executing query')
-            return 1
 
 
     populate_reporting_schema = PythonOperator(
