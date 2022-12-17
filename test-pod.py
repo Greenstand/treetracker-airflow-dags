@@ -55,7 +55,7 @@ with DAG(
     podrun = KubernetesPodOperator(
         namespace="airflow",
         image='greenstand/domain-migration-scripts:1.0.0',
-        cmds=["sh", "-c", "echo 'xxxx'"],
+        cmds=["sh", "-c", f"npm i && npm run migrate-trees"],
         # arguments=["npm", "run", "migrate-trees"],
         # arguments=["env"],
         #arguments=[f"DATABASE_URL={conn}" ,"env"],
