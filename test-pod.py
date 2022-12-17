@@ -49,18 +49,24 @@ with DAG(
     )
 
     postgresConnId = "postgres_default"
+    db = PostgresHook(postgres_conn_id=postgresConnId)
+    conn = db.get_conn()  
 
     podrun = KubernetesPodOperator(
         namespace="airflow",
-        image="alpine",
-        cmds=["sh", "-c", "echo 'xxxx'"],
+        image='greenstand/domain-migration-scripts:1.0.0',
+        cmds=["bash", "-cx"],
+        # arguments=["npm", "run", "migrate-trees"],
+        arguments=["env"],
         name="run-k8s-pod-command",
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
         task_id="k8s-pod",
         get_logs=True,
+        environment={
+            'DATABASE_URL': conn
+        },
     )
-
 
     podrun >> t1
