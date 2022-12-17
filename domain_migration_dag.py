@@ -41,7 +41,7 @@ with DAG(
     schedule_interval= "@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=['test'],
+    tags=['db','domain'],
 ) as dag:
 
     t1 = BashOperator(
