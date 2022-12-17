@@ -8,6 +8,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 import psycopg2.extras
+from airflow.models import Variable
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -52,7 +53,7 @@ with DAG(
     db = PostgresHook(postgres_conn_id=postgresConnId)
     conn = db.get_uri()  
     environments = {
-        'DATABASE_URL': conn
+        'DATABASE_URL': Variable.get("DATABASE_URL")
     }
 
     podrun = KubernetesPodOperator(
