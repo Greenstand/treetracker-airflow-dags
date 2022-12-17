@@ -57,7 +57,8 @@ with DAG(
         image='greenstand/domain-migration-scripts:1.0.0',
         cmds=["bash", "-cx"],
         # arguments=["npm", "run", "migrate-trees"],
-        arguments=["env"],
+        # arguments=["env"],
+        arguments=[f"DATABASE_URL={conn}" ,"env"],
         name="run-k8s-pod-command",
         do_xcom_push=False,
         is_delete_operator_pod=True,
@@ -68,5 +69,6 @@ with DAG(
             'DATABASE_URL': conn
         },
     )
+
 
     podrun >> t1
