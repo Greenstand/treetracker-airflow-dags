@@ -35,9 +35,9 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'test-pod',
+    'domain-migration',
     default_args=default_args,
-    description='test pod',
+    description='migrate legacy data to new domain db',
     schedule_interval= "@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
