@@ -69,7 +69,7 @@ with DAG(
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
-        task_id="k8s-pod",
+        task_id="k8s-pod-trees",
         get_logs=True,
         env_vars=environments
     )
@@ -82,7 +82,7 @@ with DAG(
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
-        task_id="k8s-pod",
+        task_id="k8s-pod-planter",
         get_logs=True,
         env_vars=environments
     )
