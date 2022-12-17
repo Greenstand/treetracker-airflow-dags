@@ -51,7 +51,7 @@ with DAG(
     postgresConnId = "postgres_default"
 
     podrun = KubernetesPodOperator(
-        namespace="default",
+        namespace="airflow",
         image="alpine",
         cmds=["sh", "-c", "date"],
         name="run-k8s-pod-command",
