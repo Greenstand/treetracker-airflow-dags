@@ -55,10 +55,10 @@ with DAG(
     podrun = KubernetesPodOperator(
         namespace="airflow",
         image='greenstand/domain-migration-scripts:1.0.0',
-        cmds=["bash", "-cx"],
+        cmds=["sh", "-c", "echo 'xxxx'"],
         # arguments=["npm", "run", "migrate-trees"],
         # arguments=["env"],
-        arguments=[f"DATABASE_URL={conn}" ,"env"],
+        #arguments=[f"DATABASE_URL={conn}" ,"env"],
         name="run-k8s-pod-command",
         do_xcom_push=False,
         is_delete_operator_pod=True,
