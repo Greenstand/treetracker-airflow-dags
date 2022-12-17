@@ -53,7 +53,8 @@ with DAG(
     db = PostgresHook(postgres_conn_id=postgresConnId)
     conn = db.get_uri()  
     environments = {
-        'DATABASE_URL': Variable.get("DATABASE_URL")
+        'DATABASE_URL': Variable.get("DATABASE_URL"),
+        'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
     podrun = KubernetesPodOperator(
