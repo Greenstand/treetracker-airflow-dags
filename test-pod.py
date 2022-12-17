@@ -65,9 +65,6 @@ with DAG(
         in_cluster=True,
         task_id="k8s-pod",
         get_logs=True,
-        environment={
-            'DATABASE_URL': conn
-        },
     )
 
 
