@@ -51,11 +51,14 @@ with DAG(
     postgresConnId = "postgres_default"
     db = PostgresHook(postgres_conn_id=postgresConnId)
     conn = db.get_uri()  
+    environments = {
+        'DATABASE_URL': conn
+    }
 
     podrun = KubernetesPodOperator(
         namespace="airflow",
         image='greenstand/domain-migration-scripts:1.0.0',
-        cmds=["sh", "-c", f"""DATABASE_URL={conn} npm run migrate-trees"""],
+        cmds=["sh", "-c", "npm run migrate-trees"],
         # arguments=["npm", "run", "migrate-trees"],
         # arguments=["env"],
         #arguments=[f"DATABASE_URL={conn}" ,"env"],
@@ -65,6 +68,7 @@ with DAG(
         in_cluster=True,
         task_id="k8s-pod",
         get_logs=True,
+        env_vars=environments
     )
 
 
