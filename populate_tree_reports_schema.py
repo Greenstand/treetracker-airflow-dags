@@ -57,22 +57,22 @@ with DAG(
         try:
             cursor.execute("""
              SELECT
-                tree.uuid AS tree_uuid,
+                tree.id AS tree_uuid,
                 tree.created_at AS tree_created_at,
                 ga.first_name AS planter_first_name,
                 ga.last_name AS planter_last_name,
                 ga.wallet AS planter_identifier,
                 tree.lat AS lat,
                 tree.lon AS lon,
-                tree.note AS note,
-                planting_organization.stakeholder_uuid AS planting_organization_uuid,
-                planting_organization.name AS planting_organization_name,
-                hs.scientific_name AS species,
+                tc.note AS note,
+                planting_organization.id AS planting_organization_uuid,
+                planting_organization.org_name AS planting_organization_name,
+                hs.scientific_name AS species
               FROM treetracker.tree
               JOIN treetracker.capture tc
-                ON tc.id = tree.latest_capture_uuid
+                ON tc.id = tree.latest_capture_id
               JOIN treetracker.grower_account ga
-                ON ga.id = rc.grower_account_id
+                ON ga.id = tc.grower_account_id
               LEFT JOIN stakeholder.stakeholder planting_organization
                 ON planting_organization.id = ga.organization_id
               LEFT JOIN herbarium.species hs
