@@ -57,14 +57,28 @@ with DAG(
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
-    podrun = KubernetesPodOperator(
-        namespace="airflow",
-        image='greenstand/domain-migration-scripts:1.0.0',
-        cmds=["sh", "-c", "npm run migrate-trees"],
-        # arguments=["npm", "run", "migrate-trees"],
-        # arguments=["env"],
-        #arguments=[f"DATABASE_URL={conn}" ,"env"],
-        name="run-k8s-pod-command",
+    image = 'greenstand/domain-migration-scripts:1.0.0'
+
+    namespace = 'airflow'
+
+    migrate_trees = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_trees"],
+        name="airflow-k8s-pod",
+        do_xcom_push=False,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        task_id="k8s-pod",
+        get_logs=True,
+        env_vars=environments
+    )
+
+    migrate_planter_info = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_planter_info"],
+        name="airflow-k8s-pod",
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
@@ -74,4 +88,4 @@ with DAG(
     )
 
 
-    podrun >> t1
+    migrate_planter_info >> migrate_trees >> t1
