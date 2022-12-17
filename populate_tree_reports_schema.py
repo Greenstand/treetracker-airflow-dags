@@ -82,7 +82,7 @@ with DAG(
             print("SQL result:", cursor.query)
 
             updateCursor.execute("""
-              DELETE FROM reporting.capture_denormalized
+              DELETE FROM reporting.tree_denormalized
             """)
 
             for row in cursor:
@@ -91,7 +91,7 @@ with DAG(
                # print(row)
 
                 updateCursor.execute("""
-                  INSERT INTO reporting.capture_denormalized
+                  INSERT INTO reporting.tree_denormalized
                   (
                     tree_uuid,
                     tree_created_at,
