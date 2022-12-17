@@ -50,12 +50,12 @@ with DAG(
 
     postgresConnId = "postgres_default"
     db = PostgresHook(postgres_conn_id=postgresConnId)
-    conn = db.get_conn()  
+    conn = db.get_uri()  
 
     podrun = KubernetesPodOperator(
         namespace="airflow",
         image='greenstand/domain-migration-scripts:1.0.0',
-        cmds=["sh", "-c", f"""DATABASE_URL={conn} npm run migrate-trees"""],
+        cmds=["sh", "-c", f"""echo '{conn}'"""],#npm run migrate-trees"""],
         # arguments=["npm", "run", "migrate-trees"],
         # arguments=["env"],
         #arguments=[f"DATABASE_URL={conn}" ,"env"],
