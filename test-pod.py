@@ -53,9 +53,9 @@ with DAG(
     podrun = KubernetesPodOperator(
         namespace="airflow",
         image="alpine",
-        cmds=["sh", "-c", "date"],
+        cmds=["sh", "-c", "echo 'xxxx'"],
         name="run-k8s-pod-command",
-        do_xcom_push=True,
+        do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
         task_id="k8s-pod",
