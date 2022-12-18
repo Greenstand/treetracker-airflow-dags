@@ -106,7 +106,7 @@ with DAG(
                     species
                   )
                   values
-                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                   RETURNING *
                 """, ( 
                         row['tree_uuid'], 
