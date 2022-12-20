@@ -37,9 +37,9 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'pre_request_map_clusters',
+    'pre_request_map_clusters_fccphase1',
     default_args=default_args,
-    description='Rre-request the all map cluster version 2.2',
+    description='Rre-request the all map cluster fccphase1 version 1',
     schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
@@ -54,7 +54,16 @@ with DAG(
 
     def pre_request_job(ds, **kwargs):
         print("do pre request job:")
-        pre_request_map_clusters("http://treetracker-tile-server.tile-server.svc.cluster.local")
+        def request(begin_zoom_level, end_zoom_level, query_string):
+            for zoom_level in range(begin_zoom_level, end_zoom_level + 1):
+                url_prefix = "http://treetracker-tile-server.tile-server.svc.cluster.local"
+                url = f"{url_prefix}/{zoom_level}/1/1.png?{query_string}"
+                print(f"request: {url}")
+                begin_time = datetime.now()
+                pre_request(url)
+                end_time = datetime.now()
+                print(f"request: took {end_time - begin_time}")
+        request(2,15, "map_name=fcctrees")
         return 1
 
     pre_request_map_cluster_job = PythonOperator(
