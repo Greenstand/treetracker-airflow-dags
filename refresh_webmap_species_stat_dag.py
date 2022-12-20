@@ -52,6 +52,8 @@ with DAG(
             # Close the connection
             cur.close()
 
+            conn.commit()
+
         except (Exception, psycopg.DatabaseError) as error:
             print(error)
 
