@@ -50,10 +50,9 @@ def refresh_country_leader_board(conn):
           )
           group by region_id
           order by planted desc
-          limit {}
           ) r 
           left join region on r.region_id = region.id
-        '''.format(continent,limit)
+        '''.format(continent)
 
 
     try:
