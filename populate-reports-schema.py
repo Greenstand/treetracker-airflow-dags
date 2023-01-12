@@ -88,7 +88,6 @@ with DAG(
               ON ST_WITHIN(trees.estimated_geometric_location, region.geom) 
               WHERE trees.active = true
               AND planter_identifier IS NOT NULL
-              AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178))
               --- AND trees.id = 827280 
               ;
             """);
