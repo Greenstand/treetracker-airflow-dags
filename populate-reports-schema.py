@@ -60,7 +60,7 @@ with DAG(
               trees.uuid AS capture_uuid,
               planter.first_name AS planter_first_name,
               planter.last_name AS planter_last_name,
-              planter.phone AS planter_identifier,
+              COALESCE(planter.phone, planter.email) AS planter_identifier,
               planter.gender AS gender,
               trees.time_created AS capture_created_at,
               trees.note AS note,
@@ -87,8 +87,7 @@ with DAG(
               ) region
               ON ST_WITHIN(trees.estimated_geometric_location, region.geom) 
               WHERE trees.active = true
-              AND planter_identifier IS NOT NULL
-              --- AND trees.id = 827280 
+              AND (planter_identifier IS NOT NULL or planter_id is not null)
               ;
             """);
             print("SQL result:", cursor.query)
