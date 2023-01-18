@@ -39,7 +39,8 @@ def refresh_country_leader_board(conn):
         on r2.region_id = region.id'''.format(limit)
     else:
         sql = '''
-          select r.*, region.name, region.centroid from (
+          select t.*, region.id, region.centroid from (
+          select sum(r.planted) as planted, region.name from (
           select count(distinct(tree_id)) planted, region_id from active_tree_region
           where region_id in (
           --- select records that it's centroid is within the polygon
@@ -52,7 +53,11 @@ def refresh_country_leader_board(conn):
           order by planted desc
           ) r 
           left join region on r.region_id = region.id
-        '''.format(continent)
+          group by region.name
+          ) t
+          left join region on t.name = region.name
+          limit {}
+        '''.format(continent, limit)
 
 
     try:
