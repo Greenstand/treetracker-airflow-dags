@@ -2,13 +2,14 @@ from datetime import datetime, timedelta
 from textwrap import dedent
 from pprint import pprint
 from airflow import DAG
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import psycopg2.extras
-from lib.contracts_earnings_fcc import contract_earnings_fcc
-from lib.pre_request import pre_request
-
-from lib.planter_entity import planter_entity
+from airflow.utils.dates import days_ago
+from lib.country_leader_board import refresh_country_leader_board
+from lib.grower_export import grower_export
 from airflow.models import Variable
 
 # These args will get passed on to each operator
@@ -36,14 +37,13 @@ default_args = {
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'pre_request_map_clusters',
+    'refresh_country_leader_board',
     default_args=default_args,
-    description='Rre-request the freetown map cluster',
-    schedule_interval= '*/5 * * * *',
-    start_date=datetime(2021, 1, 1),
-    max_active_runs=1,
+    description='refresh country leader board version 2',
+    schedule_interval="@daily",
+    start_date=days_ago(2),
     catchup=False,
-    tags=['reporting', 'freetown'],
+    tags=['webmap'],
 ) as dag:
 
     t1 = BashOperator(
@@ -51,23 +51,23 @@ with DAG(
         bash_command='date',
     )
 
-    def pre_request_job(ds, **kwargs):
-        print("do pre request job:")
-        def request(begin_zoom_level, end_zoom_level, query_string):
-            for zoom_level in range(begin_zoom_level, end_zoom_level + 1):
-                # url=http://treetracker-tile-server.tile-server.svc.cluster.local/${i}/1/1.png
-                url = f"http://treetracker-tile-server.tile-server.svc.cluster.local/{zoom_level}/1/1.png?{query_string}"
-                print(f"request: {url}")
-                begin_time = datetime.now()
-                pre_request(url)
-                end_time = datetime.now()
-                print(f"request: took {end_time - begin_time}")
-        request(2,15, "map_name=freetown")
-        return 1
+    postgresConnId = "postgres_default"
 
-    pre_request_map_cluster = PythonOperator(
-        task_id='pre_request_map_cluster',
-        python_callable=pre_request_job,
+    def wrap(ds, **kwargs):
+      from lib.utils import print_time
+      db = PostgresHook(postgres_conn_id=postgresConnId)
+      conn = db.get_conn()  
+      try:
+        refresh_country_leader_board(conn)
+        return 0
+      except Exception as e:
+          print("get error when export:", e)
+          raise ValueError('Error executing query')
+
+    task = PythonOperator(
+        task_id='refresh_country_leader_board',
+        python_callable=wrap,
         )
 
-    pre_request_map_cluster >> t1
+
+    task >> t1

@@ -60,7 +60,8 @@ with DAG(
               trees.uuid AS capture_uuid,
               planter.first_name AS planter_first_name,
               planter.last_name AS planter_last_name,
-              planter.phone AS planter_identifier,
+              COALESCE(planter.phone, planter.email) AS planter_identifier,
+              planter.gender AS gender,
               trees.time_created AS capture_created_at,
               trees.note AS note,
               trees.lat AS lat,
@@ -86,9 +87,7 @@ with DAG(
               ) region
               ON ST_WITHIN(trees.estimated_geometric_location, region.geom) 
               WHERE trees.active = true
-              AND planter_identifier IS NOT NULL
-              AND planter.organization_id IN (SELECT entity_id from getEntityRelationshipChildren(178))
-              --- AND trees.id = 827280 
+              AND (planter_identifier IS NOT NULL or planter_id is not null)
               ;
             """);
             print("SQL result:", cursor.query)
@@ -107,16 +106,16 @@ with DAG(
                   (capture_uuid, planter_first_name, planter_last_name, planter_identifier,
                    capture_created_at, lat, lon, note, approved, 
                    planting_organization_uuid, planting_organization_name,
-                   species, catchment )
+                   species, catchment, gender )
                   values
-                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                   RETURNING *
                 """, ( 
                 row['capture_uuid'], row['planter_first_name'], row['planter_last_name'], row['planter_identifier'],
                 row['capture_created_at'], row['lat'], row['lon'], row['note'], row['approved'],
                 row['planting_organization_uuid'], row['planting_organization_name'], 
                 row['species'],
-                row['catchment']
+                row['catchment'], row['gender']
                 ) );
 
             conn.commit()
@@ -125,7 +124,6 @@ with DAG(
             print("get error when exec SQL:", e)
             print("SQL result:", updateCursor.query)
             raise ValueError('Error executing query')
-            return 1
 
 
     populate_reporting_schema = PythonOperator(

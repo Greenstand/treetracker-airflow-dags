@@ -1,26 +1,27 @@
 from datetime import datetime, timedelta
-
-# The DAG object; we'll need this to instantiate a DAG
+from textwrap import dedent
+from pprint import pprint
 from airflow import DAG
-# Operators; we need this to operate!
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.utils.dates import days_ago
-from lib.assign_new_trees_to_cluster import assign_new_trees_to_cluster
+import psycopg2.extras
+from lib.contracts_earnings_fcc import contract_earnings_fcc
+from lib.pre_request import pre_request
+
+from lib.planter_entity import planter_entity
+from airflow.models import Variable
+from lib.pre_request_map_clusters import pre_request_map_clusters
+
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(2),
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 0,
-    'retry_delay': timedelta(minutes=5),
-    # 'schedule_interval': '@hourly',
+    'retries': 15,
+    'retry_delay': timedelta(seconds=1),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -35,37 +36,31 @@ default_args = {
     # 'sla_miss_callback': yet_another_function,
     # 'trigger_rule': 'all_success'
 }
-
 with DAG(
-    'assign_tree_to_cluster',
+    'pre_request_map_clusters',
     default_args=default_args,
-    description='earing_export version 1',
-    # schedule every 2 hours
-    schedule_interval='0 */2 * * *',
+    description='Rre-request the all map cluster version 2.2',
+    schedule_interval= '*/5 * * * *',
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
     catchup=False,
-    tags=['map'],
+    tags=['reporting', 'map'],
 ) as dag:
-
-    postgresConnId = "postgres_default"
-    def assign_tree(ds, **kwargs):
-        from lib.utils import print_time
-        db = PostgresHook(postgres_conn_id=postgresConnId, keepalives_idle=30)
-        conn = db.get_conn()  
-        assign_new_trees_to_cluster(conn, False);
-    
-    assign_tree_task = PythonOperator(
-        task_id='assign_tree',
-        python_callable=assign_tree,
-    )
 
     t1 = BashOperator(
         task_id='print_date',
         bash_command='date',
     )
 
-    t1 >> assign_tree_task
+    def pre_request_job(ds, **kwargs):
+        print("do pre request job:")
+        pre_request_map_clusters("http://treetracker-tile-server.tile-server.svc.cluster.local")
+        return 1
 
-#version
-#2022-05-20 15:59
+    pre_request_map_cluster_job = PythonOperator(
+        task_id='pre_request_map_cluster',
+        python_callable=pre_request_job,
+        )
+
+    pre_request_map_cluster_job >> t1
+

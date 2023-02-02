@@ -1,26 +1,27 @@
 from datetime import datetime, timedelta
-
-# The DAG object; we'll need this to instantiate a DAG
+from textwrap import dedent
+from pprint import pprint
 from airflow import DAG
-# Operators; we need this to operate!
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+import psycopg2.extras
 from airflow.utils.dates import days_ago
-from lib.assign_new_trees_to_cluster import assign_new_trees_to_cluster
+from airflow.models import Variable
+import lib.utils
+import lib.upload_planter_info
+
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(2),
     'email': ['airflow@example.com'],
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
-    # 'schedule_interval': '@hourly',
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -35,37 +36,49 @@ default_args = {
     # 'sla_miss_callback': yet_another_function,
     # 'trigger_rule': 'all_success'
 }
-
 with DAG(
-    'assign_tree_to_cluster',
+    'upload_planter_info',
     default_args=default_args,
-    description='earing_export version 1',
-    # schedule every 2 hours
-    schedule_interval='0 */2 * * *',
-    start_date=datetime(2021, 1, 1),
-    max_active_runs=1,
+    description='ftp',
+    schedule_interval='@daily',
+    start_date=days_ago(2),
     catchup=False,
-    tags=['map'],
+    tags=['ftp', 'greenstand'],
 ) as dag:
-
-    postgresConnId = "postgres_default"
-    def assign_tree(ds, **kwargs):
-        from lib.utils import print_time
-        db = PostgresHook(postgres_conn_id=postgresConnId, keepalives_idle=30)
-        conn = db.get_conn()  
-        assign_new_trees_to_cluster(conn, False);
-    
-    assign_tree_task = PythonOperator(
-        task_id='assign_tree',
-        python_callable=assign_tree,
-    )
 
     t1 = BashOperator(
         task_id='print_date',
         bash_command='date',
     )
 
-    t1 >> assign_tree_task
+    postgresConnId = "postgres_default"
 
-#version
-#2022-05-20 15:59
+    def earing_export_wrap(ds, **kwargs):
+      from lib.utils import print_time
+      db = PostgresHook(postgres_conn_id=postgresConnId)
+      conn = db.get_conn()  
+      try:
+          date = datetime.now().strftime("%Y-%m-%d")
+          print("date:", date)
+          FTP_HOST = Variable.get("FTP_HOST")
+          FTP_USER = Variable.get("FTP_USER")
+          FTP_PASSWORD = Variable.get("FTP_PPP")
+          lib.upload_planter_info.upload_planter_info(
+            conn, 
+            FTP_HOST,
+            FTP_USER,
+            FTP_PASSWORD,
+            False
+          )
+          return 0
+      except Exception as e:
+          print("get error when execute ftp upload:", e)
+          raise ValueError('Error executing')
+
+    earing_export_task = PythonOperator(
+        task_id='earing_export',
+        python_callable=earing_export_wrap,
+        )
+
+
+    earing_export_task >> t1
