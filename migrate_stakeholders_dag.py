@@ -57,20 +57,33 @@ with DAG(
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
-    image = 'greenstand/domain-migration-scripts:1.0.0'
+    image = 'greenstand/domain-migration-scripts:latest'
     namespace = 'airflow'
     
-    migrate_device_configurations = KubernetesPodOperator(
+    migrate_stakeholders = KubernetesPodOperator(
         namespace=namespace,
         image=image,
-        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_device_configurations"],
+        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_stakeholders"],
         name="airflow-k8s-pod",
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
-        task_id="k8s-pod-migrate_device_configurations",
+        task_id="k8s-pod-migrate_stakeholders",
         get_logs=True,
         env_vars=environments
     )
 
-    migrate_device_configurations >> t1
+    migrate_entity_ids_to_stakeholder = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_entity_ids_to_stakeholder"],
+        name="airflow-k8s-pod",
+        do_xcom_push=False,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        task_id="k8s-pod-migrate_entity_ids_to_stakeholder",
+        get_logs=True,
+        env_vars=environments
+    )
+
+    migrate_stakeholders >> migrate_entity_ids_to_stakeholder >> t1
