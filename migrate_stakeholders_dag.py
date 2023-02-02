@@ -38,7 +38,7 @@ with DAG(
     'stakeholder-migration',
     default_args=default_args,
     description='migrate entity to stakeholder',
-    schedule_interval= "@daily",
+    schedule_interval= '@daily',
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['stakeholder','domain'],
@@ -57,7 +57,7 @@ with DAG(
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
-    image = 'greenstand/domain-migration-scripts:latest'
+    image = 'greenstand/domain-migration-scripts:1.0.0'
     namespace = 'airflow'
     
     migrate_stakeholders = KubernetesPodOperator(
