@@ -114,35 +114,6 @@ with DAG(
         get_logs=True,
         env_vars=environments
     )
-
-    
-    migrate_stakeholders = KubernetesPodOperator(
-        namespace=namespace,
-        image=image,
-        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_stakeholders"],
-        name="airflow-k8s-pod",
-        do_xcom_push=False,
-        is_delete_operator_pod=True,
-        in_cluster=True,
-        task_id="k8s-pod-migrate_stakeholders",
-        get_logs=True,
-        env_vars=environments
-    )
-
-
-    migrate_entity_ids_to_stakeholder = KubernetesPodOperator(
-        namespace=namespace,
-        image=image,
-        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_entity_ids_to_stakeholder"],
-        name="airflow-k8s-pod",
-        do_xcom_push=False,
-        is_delete_operator_pod=True,
-        in_cluster=True,
-        task_id="k8s-pod-migrate_entity_ids_to_stakeholder",
-        get_logs=True,
-        env_vars=environments
-    )
-
     
     migrate_raw_capture = KubernetesPodOperator(
         namespace=namespace,
@@ -174,8 +145,6 @@ with DAG(
     migrate_planter_info >> migrate_raw_capture
 
     migrate_device_configurations >> migrate_raw_capture
-
-    migrate_stakeholders >> migrate_entity_ids_to_stakeholder >> migrate_raw_capture
 
     migrate_species >> migrate_raw_capture
 
