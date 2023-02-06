@@ -52,9 +52,9 @@ with DAG(
 
     postgresConnId = "postgres_default"
     db = PostgresHook(postgres_conn_id=postgresConnId)
-    conn = db.get_uri()  
+    conn = db.get_uri()
     environments = {
-        'DATABASE_URL': Variable.get("DATABASE_URL"),
+        'DATABASE_URL': "postgresql://" + Variable.get("DATABASE_LOGIN") + ":" + Variable.get("DATABASE_PASSWORD") + "@" + Variable.get("DATABASE"),
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
