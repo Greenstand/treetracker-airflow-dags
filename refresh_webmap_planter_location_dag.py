@@ -8,6 +8,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import psycopg2.extras
 from airflow.utils.dates import days_ago
+from lib.utils import on_failure_callback
 
 
 # These args will get passed on to each operator
@@ -20,6 +21,7 @@ default_args = {
     'email_on_retry': False,
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
+    'on_failure_callback': on_failure_callback, # needs to be set in default_args to work correctly: https://github.com/apache/airflow/issues/26760
 }
 
 with DAG(

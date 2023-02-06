@@ -10,6 +10,7 @@ import psycopg2.extras
 from airflow.utils.dates import days_ago
 from lib.country_leader_board import refresh_country_leader_board
 from lib.grower_export import grower_export
+from lib.utils import on_failure_callback
 from airflow.models import Variable
 
 # These args will get passed on to each operator
@@ -30,7 +31,7 @@ default_args = {
     # 'dag': dag,
     # 'sla': timedelta(hours=2),
     # 'execution_timeout': timedelta(seconds=300),
-    # 'on_failure_callback': some_function,
+    'on_failure_callback': on_failure_callback, # needs to be set in default_args to work correctly: https://github.com/apache/airflow/issues/26760
     # 'on_success_callback': some_other_function,
     # 'on_retry_callback': another_function,
     # 'sla_miss_callback': yet_another_function,

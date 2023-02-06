@@ -9,6 +9,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from lib.assign_new_trees_to_cluster import assign_new_trees_to_cluster
+from lib.utils import on_failure_callback
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
@@ -29,7 +30,7 @@ default_args = {
     # 'dag': dag,
     # 'sla': timedelta(hours=2),
     # 'execution_timeout': timedelta(seconds=300),
-    # 'on_failure_callback': some_function,
+    'on_failure_callback': on_failure_callback, # needs to be set in default_args to work correctly: https://github.com/apache/airflow/issues/26760
     # 'on_success_callback': some_other_function,
     # 'on_retry_callback': another_function,
     # 'sla_miss_callback': yet_another_function,
@@ -53,7 +54,7 @@ with DAG(
         from lib.utils import print_time
         db = PostgresHook(postgres_conn_id=postgresConnId, keepalives_idle=30)
         conn = db.get_conn()  
-        assign_new_trees_to_cluster(conn, False);
+        assign_new_trees_to_cluster(conn, False)
     
     assign_tree_task = PythonOperator(
         task_id='assign_tree',
