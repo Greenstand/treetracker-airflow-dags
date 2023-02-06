@@ -71,6 +71,7 @@ with DAG(
         #     return 1
 
       # Test Airflow password masking: https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/security/secrets/mask-sensitive-values.html
+      """
       from airflow.models import Variable
       print(Variable.get("DATABASE_URL"))
       with open('DATABASE_URL.txt', 'w') as f:
@@ -83,6 +84,7 @@ with DAG(
       print(db_url) # masked in Airflow Variables UI and log files
       with open('db_url.txt', 'w') as f:
         f.write(db_url) # not masked when actually used
+      """
 
     create_new_person_records = PythonOperator(
         task_id='create_new_person_records',
