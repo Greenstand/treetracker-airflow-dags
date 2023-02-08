@@ -52,9 +52,12 @@ with DAG(
 
     postgresConnId = "postgres_default"
     db = PostgresHook(postgres_conn_id=postgresConnId)
-    conn = db.get_uri()  
+    conn = db.get_uri()
+    # Airflow Variable DATABASE_PASSWORD is masked in the Airflow Variables UI and logs but not when actually used
+    # https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/security/secrets/mask-sensitive-values.html
+    # tested working in the https://github.com/Greenstand/treetracker-airflow-dags/blob/main/test1.py DAG
     environments = {
-        'DATABASE_URL': Variable.get("DATABASE_URL"),
+        'DATABASE_URL': "postgresql://" + Variable.get("DATABASE_LOGIN") + ":" + Variable.get("DATABASE_PASSWORD") + "@" + Variable.get("DATABASE"),
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
