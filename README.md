@@ -19,9 +19,9 @@ To run Python code without installing airflow:
 - sudo pip3 install apache-airflow[psycopg2]
 - sudo pip3 install apache-airflow-providers-cncf-kubernetes
 
-For this repo and clone it into your local directory:
+Fork this repo and clone it into your local directory:
 - cd ~/Greenstand/git/
-- git clone git@github.com:[your github profile name]/treetracker-airflow-dags.git
+- git clone git@github.com:{your github profile name}/treetracker-airflow-dags.git
 
 Add this to your ~/.bash_profile
 - export AIRFLOW_HOME='~/airflow'
@@ -94,7 +94,7 @@ For access credentials to the dev Airflow and dev postgreSQL database:
 
 - Fork this repo.
 - Clone the fork to your local system.
-	- git clone git@github.com:[your github profile name]/treetracker-infrastructure.git
+	- git clone git@github.com:{your github profile name}/treetracker-infrastructure.git
 - Make a new branch.
 - Make and test your changes on your local Airflow.
 - Git add, commit, and push the changes back to your repo.
