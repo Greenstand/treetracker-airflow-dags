@@ -1,6 +1,6 @@
 # Treetracker Automation using Airflow
 
-This repository contains automations for Treetracker processes using an open source worflow orchestration tool called Airflow. Airflow allows us to flexibly and robustly create and schedule jobs to run on a schedule or be manually triggered.  Airflow uses the python language and requires python 3 to be installed to run.
+This repository contains automations for Treetracker processes using an open source worflow orchestration tool called Airflow (https://airflow.apache.org/). Airflow allows us to flexibly and robustly create and schedule jobs to run on a schedule or be manually triggered.  Airflow uses the python language and requires python 3 to be installed to run.
 
 # Set up your local development environment
 
@@ -14,24 +14,24 @@ To run Python code without installing airflow:
 3. When the test passed, add new dag file to invoke the script/function.
 
 ## Option 2: Install using pip
-sudo pip3 install apache-airflow
-sudo pip3 install apache-airflow[postgres]
-sudo pip3 install apache-airflow[psycopg2]
-sudo pip3 install apache-airflow-providers-cncf-kubernetes
+- sudo pip3 install apache-airflow
+- sudo pip3 install apache-airflow[postgres]
+- sudo pip3 install apache-airflow[psycopg2]
+- sudo pip3 install apache-airflow-providers-cncf-kubernetes
 
 For this repo and clone it into your local directory:
-cd ~/Greenstand/git/
-git clone git@github.com:<your github profile name>/treetracker-airflow-dags.git
+- cd ~/Greenstand/git/
+- git clone git@github.com:[your github profile name]/treetracker-airflow-dags.git
 
 Add this to your ~/.bash_profile
-export AIRFLOW_HOME='~/airflow'
-export AIRFLOW_CONFIG=$AIRFLOW_HOME/airflow.cfg
+- export AIRFLOW_HOME='~/airflow'
+- export AIRFLOW_CONFIG=$AIRFLOW_HOME/airflow.cfg
 
 then 
-source ~/.bash_profile
+- source ~/.bash_profile
 
 Modify your airflow.cfg:
-dags_folder = ~/Greenstand/git/treetracker-airflow-dags
+- dags_folder = ~/Greenstand/git/treetracker-airflow-dags
 
 This approach seems to work well on MacOS X, but on Windows requires many extra dependencies.
 More information is available at https://airflow.apache.org/docs/apache-airflow/stable/installation/installing-from-pypi.html#
@@ -72,31 +72,31 @@ with DAG(
 
 Greenstand's Airflow development environment is set up like this:
 
-local Airflow -> dev Airflow -> prod Airflow
+- local Airflow -> dev Airflow -> prod Airflow
 
 There is also a dev and prod / prod readonly PostgreSQL database that is used by Airflow. Some Airflow DAGs transform the data in the PostgreSQL databases.
 
-local Airflow and dev Airflow use the dev PostgreSQL database.
-prod Airflow uses the prod PostgreSQL database.
+- local Airflow and dev Airflow use the dev PostgreSQL database.
+- prod Airflow uses the prod PostgreSQL database.
 
-dev Airflow is deployed on Greenstand's dev Kubernetes cluster on DigitalOcean.
-prod Airflow is deployed on Greenstand's prod Kubernetes cluster on DigitalOcean.
+- dev Airflow is deployed on Greenstand's dev Kubernetes cluster on DigitalOcean.
+- prod Airflow is deployed on Greenstand's prod Kubernetes cluster on DigitalOcean.
 
-Please see: 
-https://github.com/Greenstand/treetracker-infrastructure/tree/master/airflow
-for how Airflow is configured and installed on Kubernetes. Greenstand uses Ansible to deploy and configure an Airflow Helm Chart onto the Kubernetes cluster.
+Please see: https://github.com/Greenstand/treetracker-infrastructure/tree/master/airflow for how Airflow is configured and installed on Kubernetes. Greenstand uses Ansible to deploy and configure an Airflow Helm Chart onto the Kubernetes cluster.
 
 The local Airflow development environment is for Greenstand volunteers to develop Airflow DAGs locally on their machine. Once you have finished developing locally, you can create a Pull Request on Github and merge the changes back to the main branch of this repo. Changes to the main branch will automatically be deployed to the dev Airflow. Once the new DAG is working on dev Airflow, the production branch of this repo will be updated and the new changes will be deployed to the prod Airflow.
 
-For access credentials to the dev Airflow and dev postgreSQL database, please ask the Greenstand automations-working-group Slack channel. The notification-airflow Slack channel is also important.
+For access credentials to the dev Airflow and dev postgreSQL database: 
+- please ask the Greenstand automations-working-group Slack channel.
+- The notification-airflow Slack channel is also important.
 
 # How to do a Github Pull Request
 
 - Fork this repo.
 - Clone the fork to your local system.
-	- git clone git@github.com:<github profile name>/treetracker-infrastructure.git
+	- git clone git@github.com:[your github profile name]/treetracker-infrastructure.git
 - Make a new branch.
-- Make your changes.
-- Push it back to your repo.
+- Make and test your changes on your local Airflow.
+- Git add, commit, and push the changes back to your repo.
 - Click the Compare & pull request button.
 - Click Create pull request to open a new pull request.
