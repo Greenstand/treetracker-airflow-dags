@@ -86,7 +86,7 @@ Please see: https://github.com/Greenstand/treetracker-infrastructure/tree/master
 
 The local Airflow development environment is for Greenstand volunteers to develop Airflow DAGs locally on their machine. Once you have finished developing locally, you can create a Pull Request on Github and merge the changes back to the main branch of this repo. Changes to the main branch will automatically be deployed to the dev Airflow. Once the new DAG is working on dev Airflow, the production branch of this repo will be updated and the new changes will be deployed to the prod Airflow.
 
-For access credentials to the dev Airflow and dev postgreSQL database: 
+For access credentials to the dev Airflow and dev or prod readonly postgreSQL database: 
 - please ask the Greenstand automations-working-group Slack channel.
 - The notification-airflow Slack channel is also important.
 
