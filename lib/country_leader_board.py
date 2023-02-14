@@ -54,7 +54,7 @@ def refresh_country_leader_board(conn):
                     join (
                         -- select the geom of all continents
                         select id, name, geom
-                        from region -- can speed up query by adding a b-tree index on type_id column in region table
+                        from region
                         where type_id in (
                             select id
                             from region_type
