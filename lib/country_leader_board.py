@@ -79,18 +79,18 @@ def refresh_country_leader_board(conn):
             -- There are multiple region ids for the same country name, e.g.:
             -- select distinct(id), name from region where name = 'United States' order by id
             -- returns id 6632869, 6632870, 6632871, 6632872, 6632873, 6632874, 6632875, etc. for 'United States'
-            -- to fix this, we choose the first id & centroid associated with the 'United States'
+            -- to fix this, we arbitrarily choose the smallest id & centroid associated with the 'United States'
             -- https://stackoverflow.com/questions/6841605/get-top-1-row-of-each-group
-            select distinct(name), id, centroid, ROW_NUMBER() OVER (PARTITION BY name ORDER BY id DESC) AS rn
+            select distinct(name), id, centroid, ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
             from region
-            order by name, rn
+            order by name, id, rn
         ), 
         region_name_cte as (
             select * from region_cte
             WHERE rn = 1
         )
-        -- add the centroid to the number of trees for each country
-        select top_countries_cte.planted, top_countries_cte.name, region_name_cte.centroid
+        -- add the id & centroid to the number of trees for each country
+        select top_countries_cte.planted, top_countries_cte.name, region_name_cte.id, region_name_cte.centroid
         from top_countries_cte
         left join region_name_cte
         on top_countries_cte.name = region_name_cte.name
