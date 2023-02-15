@@ -79,21 +79,18 @@ def refresh_country_leader_board(conn):
             -- There are multiple region ids for the same country name, e.g.:
             -- select distinct(id), name from region where name = 'United States' order by id
             -- returns id 6632869, 6632870, 6632871, 6632872, 6632873, 6632874, 6632875, etc. for 'United States'
-            -- to fix this, we arbitrarily choose the smallest id & centroid associated with the 'United States'
-            -- https://stackoverflow.com/questions/6841605/get-top-1-row-of-each-group
-            select distinct(name), id, centroid, ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
+            -- to fix this, we select the largest geom / centroid associated with the 'United States'
+            -- https://gis.stackexchange.com/questions/162162/postgis-query-to-retrieve-the-largest-polygon-for-multi-polygons-by-grouping-on
+            -- https://www.geekytidbits.com/postgres-distinct-on/
+            select distinct on (name) name, id, centroid
             from region
-            order by name, id, rn
-        ), 
-        region_name_cte as (
-            select * from region_cte
-            WHERE rn = 1
+            order by name, ST_Area(geom) desc
         )
         -- add the id & centroid to the number of trees for each country
-        select top_countries_cte.planted, top_countries_cte.name, region_name_cte.id, region_name_cte.centroid
+        select top_countries_cte.planted, top_countries_cte.name, region_cte.id, region_cte.centroid
         from top_countries_cte
-        left join region_name_cte
-        on top_countries_cte.name = region_name_cte.name
+        left join region_cte
+        on top_countries_cte.name = region_cte.name
         order by planted desc
         '''.format(continent,limit)
 
