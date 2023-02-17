@@ -2,7 +2,7 @@ import datetime
 
 import psycopg2
 
-def assign_new_trees_to_cluster(conn, dry_run = True):
+def assign_new_trees_to_cluster(conn):
     print("assign new trees to cluster...")
 
     # assign current time to variable
@@ -80,6 +80,9 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
         print("SQL result:", cur.query)
         print("updated rows:", cur.rowcount)
 
+        print("commit transaction")
+        conn.commit()
+
         # print time elapsed
         print("time elapsed:", datetime.datetime.now() - start)
         start = datetime.datetime.now()
@@ -89,6 +92,9 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
             REFRESH MATERIALIZED VIEW CONCURRENTLY active_tree_region
         """
         cur.execute(updateMaterializedViewSQL)
+
+        print("commit transaction")
+        conn.commit()
 
         print("time elapsed:", datetime.datetime.now() - start)
         start = datetime.datetime.now()
@@ -131,13 +137,8 @@ def assign_new_trees_to_cluster(conn, dry_run = True):
             if(index % 100 == 0):
                 print("inserted", index, "rows")
 
-        # commit transaction
-        if(dry_run == False):
-            conn.commit()
-            print("transaction committed")
-        else:
-            print("transaction rollback for dry run")
-            conn.rollback()
+        print("commit transaction")
+        conn.commit()
     except Exception as e:
         print("Error:", e)
         conn.rollback()

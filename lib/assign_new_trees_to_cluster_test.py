@@ -13,7 +13,7 @@ class Test_AssignNewTreesToCluster(unittest.TestCase):
         DB_URL = os.environ['DB_URL']
         print("DB_URL:", DB_URL)
         conn = psycopg2.connect(DB_URL, sslmode='require')
-        assign_new_trees_to_cluster(conn, True);
+        assign_new_trees_to_cluster(conn);
 
 if __name__ == '__main__':
     # Run the unit tests in the test suite with name 'Test_TestIncrementDecrement'
