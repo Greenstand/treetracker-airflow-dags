@@ -94,7 +94,7 @@ For access credentials to the dev Airflow and dev or prod readonly postgreSQL da
 
 - Fork this repo.
 - Clone the fork to your local system.
-	- git clone git@github.com:{your github profile name}/treetracker-airflow-dags.git
+	- git clone git@github.com:{your github profile name}/treetracker-infrastructure.git
 - Make a new branch.
 - Make and test your changes on your local Airflow.
 - Git add, commit, and push the changes back to your repo.
