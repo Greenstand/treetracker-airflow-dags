@@ -1,7 +1,7 @@
-
 import io
 import requests
 import os
+import csv
 
 def capture_export(conn, date, organization_id, ckan_config):
     """Prints a message with the current time"""
@@ -36,22 +36,23 @@ def capture_export(conn, date, organization_id, ckan_config):
     # go through the resource list
     for resource in resources:
         # check if the resource is already in the CKAN
-        if resource['name'] == f'capture_{date}.csv':
+        # TODO - Change the file name
+        if resource['name'] in  [f'capture_{date}.csv', f'capture_{date}_part0.csv']:
             print('resource already in the CKAN')
             raise ValueError(f'resource {date} already in the CKAN')
 
-    # start_date = date + "-01"
-    # # calculate end_date of the month
-    # import datetime
-    # # get the last day of the month
-    # end_date = (datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=31)).strftime("%Y-%m-%d")
-    # print ("to export data from:", start_date, "to:", end_date)
+    start_date = date + "-01"
+    # calculate end_date of the month
+    import datetime
+    # get the last day of the month
+    end_date = (datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=31)).strftime("%Y-%m-%d")
+    print ("to export data from:", start_date, "to:", end_date)
 
     # create cursor
     cur = conn.cursor('server-side-cursor')
     # array of file names
-    columns = ["id","planter_id","device_identifier","planter_identifier","verification_status","species_id","token_id","time_created"
-]
+    columns = ["id","planter_id","device_identifier","planter_identifier","verification_status","species_id","token_id","time_created"]
+
     sql = f"""
         SELECT 
             trees.id,
@@ -79,71 +80,120 @@ def capture_export(conn, date, organization_id, ckan_config):
     # execute query
     cur.execute(sql)
     import datetime
-    # create a new file called 'temp.csv' in the current directory
-    date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
+    # create a new file with a timestamp in the filename
+    date = datetime.datetime.now().strftime("%Y-%m-%d")
     file_name = f"capture_{date}.csv"
-    print("file_name:", file_name)
-    with open(file_name, 'w') as f:
-        f.write(f"{','.join(columns)}\n")
-        # write the data rows
-        # fetch 1000 rows at a time
+
+    # specify the maximum file size in bytes
+    max_file_size = 1 * 1024 * 1024 # 1 MB
+
+    # initialize the file and row counters
+    file_counter = 1
+    row_counter = 0
+    file_list = []
+
+    # Open the CSV file in write mode with newline=''
+    with open(file_name, 'w', newline='') as f:
+        # Create a CSV writer object
+        writer = csv.writer(f)
+        
+        # # Write the header row to the CSV file
+        writer.writerow(columns)
+        
+        # Execute the query and fetch the first batch of rows
         rows = cur.fetchmany(1000)
+        
+        # Loop through the rows and write them to the CSV file
+        row_counter = 0
+        file_counter = 1
+
         while rows:
-            print ("fetched rows:", len(rows))
             for row in rows:
-                # write each row to the file
-                f.write(','.join(str(col) for col in row) + '\n')
-            # fetch next 1000 rows
+                writer.writerow(row)
+                row_counter += 1
+
+                # Check if the file size limit has been reached
+                if f.tell() > max_file_size:
+                    # Close the current file and open a new one
+                    f.close()
+                    new_file_name = f"my_table_{date}_part{file_counter}.csv"
+                    print(f"Creating new file: {new_file_name}")
+                    
+                    # Create a new CSV writer object
+                    f = open(new_file_name, 'w', newline='')
+                    writer = csv.writer(f)
+                    writer.writerow(columns)
+
+                    # Reset the row counter and increment the file counter
+                    row_counter = 0
+                    file_counter += 1
+
+            # Fetch the next batch of rows
             rows = cur.fetchmany(1000)
-    # close the connection
+
     cur.close()
-    # close the file
-    f.close()
 
-    # print size of the file
-    print("file size:", os.stat(file_name).st_size)
+            
+    # if there are multiple files
+    if file_counter > 1:
+        print(f"{file_counter-1} files created.")
 
-    # upload the file to the CKAN
-    url = f"{ckan_config['CKAN_DOMAIN']}/api/action/resource_create"
-    print("url:", url)
-    # upload 'temp.csv' in current directory to url
-    files = {'upload': open(file_name, 'rb')}
-    # create a dictionary of the data to be posted
-    data = {
-        'package_id': id,
-        'name': file_name,
-        'description': 'capture export',
-        'format': 'csv',
-        'url_type': 'upload',
-        'resource_type': 'file.upload',
-        'mimetype': 'text/csv',
-        'hash': '',
-        'size': 0,
-        'cache_url': '',
-        'cache_last_updated': None,
-        'webstore_last_updated': None,
-        'upload': None,
-        'webstore_url': None,
-    }
-    # post the data to the CKAN
-    response = requests.post(url,
-        headers={"X-CKAN-API-Key": ckan_config['CKAN_API_KEY']},
-        files=files,
-        data=data
-    )
-    print ('response:', response)
+        # Add suffix part 0 to the first file created
+        os.rename(os.path.abspath(f"capture_{date}.csv"), os.path.abspath(f"capture_{date}_part0.csv"))
+        for i in range(0, file_counter):
+            curr_file = os.path.abspath(f"cap-ture_{date}_part{i}.csv")
+            file_list.append(curr_file)
+            print(f"CSV file {i} written to:", curr_file)
+        
+        # Close the file stream
+        f.close()
+    else:
+        file_list.append(file_name)
+        print("CSV file written to:", os.path.abspath(file_name))
 
-    # delete the file
-    os.remove(file_name)
 
-    # check response status code is 200
-    if response.status_code != 200:
-        # print http response body
-        print(response.text)
+    for file_name in file_list:
+        # upload the file to the CKAN
+        url = f"{ckan_config['CKAN_DOMAIN']}/api/action/resource_create"
+        print("url:", url)
+        # upload 'temp.csv' in current directory to url
+        files = {'upload': open(file_name, 'rb')}
+        # create a dictionary of the data to be posted
+        data = {
+            'package_id': id,
+            'name': file_name,
+            'description': 'capture export',
+            'format': 'csv',
+            'url_type': 'upload',
+            'resource_type': 'file.upload',
+            'mimetype': 'text/csv',
+            'hash': '',
+            'size': 0,
+            'cache_url': '',
+            'cache_last_updated': None,
+            'webstore_last_updated': None,
+            'upload': None,
+            'webstore_url': None,
+        }
+        # post the data to the CKAN
+        response = requests.post(url,
+            headers={"X-CKAN-API-Key": ckan_config['CKAN_API_KEY']},
+            files=files,
+            data=data
+        )
         print ('response:', response)
-        # print response as json
-        print('json:', response.json())
-        raise ValueError('response status code is not 200')
+
+        # delete the file
+        os.remove(file_name)
+
+        # check response status code is 200
+        if response.status_code != 200:
+            # print http response body
+            print(response.text)
+            print ('response:', response)
+            # print response as json
+            print('json:', response.json())
+            raise ValueError('response status code is not 200')
     return True
 
     # # now fetch the data and convert to stream object to be used in the next step
