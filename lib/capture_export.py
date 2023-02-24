@@ -41,12 +41,12 @@ def capture_export(conn, date, organization_id, ckan_config):
             print('resource already in the CKAN')
             raise ValueError(f'resource {date} already in the CKAN')
 
-    start_date = date + "-01"
-    # calculate end_date of the month
-    import datetime
-    # get the last day of the month
-    end_date = (datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=31)).strftime("%Y-%m-%d")
-    print ("to export data from:", start_date, "to:", end_date)
+    # start_date = date + "-01"
+    # # calculate end_date of the month
+    # import datetime
+    # # get the last day of the month
+    # end_date = (datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=31)).strftime("%Y-%m-%d")
+    # print ("to export data from:", start_date, "to:", end_date)
 
     # create cursor
     cur = conn.cursor('server-side-cursor')
