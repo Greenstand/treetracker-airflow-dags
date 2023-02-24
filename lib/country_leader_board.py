@@ -39,20 +39,59 @@ def refresh_country_leader_board(conn):
         on r2.region_id = region.id'''.format(limit)
     else:
         sql = '''
-          select r.*, region.name, region.centroid from (
-          select count(distinct(tree_id)) planted, region_id from active_tree_region
-          where region_id in (
-          --- select records that it's centroid is within the polygon
-          select region.id from region 
-          join (select id,name,geom from region where type_id in (select id from region_type where type = 'continents') and name = '{}') continent
-          on ST_Contains(continent.geom, region.centroid)
-          where type_id in (select id from region_type where type = 'country')
-          )
-          group by region_id
-          order by planted desc
-          limit {}
-          ) r 
-          left join region on r.region_id = region.id
+        with top_countries_cte as (
+            -- this query will group by country name and sum all the planted trees for the country
+            -- there are multiple region ids for a given country name
+            select sum(num_trees.planted) as planted, region.name from (
+                -- count the number of trees for each region id in a specific continent
+                select count(distinct(tree_id)) planted, region_id
+                from active_tree_region
+                where region_id in (
+                    --- select records that it's centroid is within the polygon
+                    -- select id of all trees within all countries within the specified continent
+                    select region.id
+                    from region 
+                    join (
+                        -- select the geom of all continents
+                        select id, name, geom
+                        from region
+                        where type_id in (
+                            select id
+                            from region_type
+                            where type = 'continents'
+                        ) and name = '{}'
+                    ) continent
+                    on ST_Contains(continent.geom, region.centroid)
+                    where type_id in (
+                        select id from region_type where type = 'country'
+                    )
+                )
+                group by region_id
+                order by planted desc
+            ) num_trees
+            left join region -- append country name to num_trees table
+            on num_trees.region_id = region.id
+            group by region.name
+            order by planted desc
+            limit {}
+        ),
+        region_cte as (
+            -- There are multiple region ids for the same country name, e.g.:
+            -- select distinct(id), name from region where name = 'United States' order by id
+            -- returns id 6632869, 6632870, 6632871, 6632872, 6632873, 6632874, 6632875, etc. for 'United States'
+            -- to fix this, we select the largest geom / centroid associated with the 'United States'
+            -- https://gis.stackexchange.com/questions/162162/postgis-query-to-retrieve-the-largest-polygon-for-multi-polygons-by-grouping-on
+            -- https://www.geekytidbits.com/postgres-distinct-on/
+            select distinct on (name) name, id, centroid
+            from region
+            order by name, ST_Area(geom) desc
+        )
+        -- add the id & centroid to the number of trees for each country
+        select cast(top_countries_cte.planted as bigint), region_cte.id region_id, top_countries_cte.name, region_cte.centroid
+        from top_countries_cte
+        left join region_cte
+        on top_countries_cte.name = region_cte.name
+        order by planted desc
         '''.format(continent,limit)
 
 
