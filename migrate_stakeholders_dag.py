@@ -38,7 +38,7 @@ default_args = {
 with DAG(
     'stakeholder-migration',
     default_args=default_args,
-    description='migrate entity to stakeholder',
+    description='consolidate the stakeholder and entity tables',
     schedule_interval= None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
@@ -85,7 +85,7 @@ with DAG(
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
-        task_id="k8s-pod-migrate_entity_ids_to_stakeholder",
+        task_id="k8s-pod-migrate_stakeholder_relation",
         get_logs=True,
         env_vars=environments
     )
