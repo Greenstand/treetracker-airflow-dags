@@ -1,4 +1,6 @@
 import datetime
+import requests
+from airflow.models import Variable
 
 
 def print_time(message):
@@ -6,9 +8,33 @@ def print_time(message):
   current_time = datetime.datetime.now()
   print(f"{message} at {current_time}!!!!")
 
+def slack_message(message=''):
+  """Sends a message to Slack. Please see: https://api.slack.com/messaging/webhooks
+      The SLACK_WEBHOOK Airflow variable must be configured in order to use this.
+      You can see Airflow variables in the Airflow UI under Admin -> Variables 
+  """
+  url = Variable.get('SLACK_WEBHOOK')
+  myobj = {'text': message}
+  x = requests.post(url, json = myobj)
+
+def on_failure_callback(context):
+    """Sends a message to Slack if this DAG fails.
+        Please see: https://stackoverflow.com/questions/44586356/airflow-failed-slack-message
+                    https://codingshower.com/airflow-slack-notifications/"""
+    slack_msg = f"""
+    :red_circle: Airflow DAG Failed.
+    *Task*: {context.get('task_instance').task_id}
+    *Dag*: {context.get('task_instance').dag_id}
+    *Execution Time*: {context.get('execution_date')}
+    *Log Url*: {context.get('task_instance').log_url}
+    """
+    slack_message(slack_msg)
+
 # export the function
 __all__ = [
     'print_time',
+    'slack_message',
+    'on_failure_callback',
 ]
 
 # given a date, return the first day and last day of the month
