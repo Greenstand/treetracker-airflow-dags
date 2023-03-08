@@ -38,7 +38,7 @@ default_args = {
 with DAG(
     'stakeholder-migration',
     default_args=default_args,
-    description='migrate entity to stakeholder',
+    description='consolidate the stakeholder and entity tables',
     schedule_interval= None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
@@ -61,13 +61,13 @@ with DAG(
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
-    image = 'greenstand/domain-migration-scripts:1.0.1'
+    image = 'greenstand/domain-migration-scripts:1.0.2'
     namespace = 'airflow'
     
     migrate_stakeholders = KubernetesPodOperator(
         namespace=namespace,
         image=image,
-        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_stakeholders"],
+        cmds=["sh", "-c", "npm run migrate-stakeholders"],
         name="airflow-k8s-pod",
         do_xcom_push=False,
         is_delete_operator_pod=True,
@@ -77,17 +77,17 @@ with DAG(
         env_vars=environments
     )
 
-    migrate_entity_ids_to_stakeholder = KubernetesPodOperator(
+    migrate_stakeholder_relation = KubernetesPodOperator(
         namespace=namespace,
         image=image,
-        cmds=["sh", "-c", "node v1Tov2Migrations/migrate_entity_ids_to_stakeholder"],
+        cmds=["sh", "-c", "npm run migrate-stakeholder-relations"],
         name="airflow-k8s-pod",
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
-        task_id="k8s-pod-migrate_entity_ids_to_stakeholder",
+        task_id="k8s-pod-migrate_stakeholder_relation",
         get_logs=True,
         env_vars=environments
     )
 
-    migrate_stakeholders >> migrate_entity_ids_to_stakeholder >> t1
+    migrate_stakeholder_relation >> migrate_stakeholders >> t1
