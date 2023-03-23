@@ -90,4 +90,4 @@ with DAG(
         env_vars=environments
     )
 
-    migrate_stakeholder_relation >> migrate_stakeholders >> t1
+    migrate_stakeholders >> migrate_stakeholder_relation >> t1
