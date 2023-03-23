@@ -61,7 +61,7 @@ with DAG(
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
-    image = 'greenstand/domain-migration-scripts'
+    image = 'greenstand/domain-migration-scripts:1.0.3'
     namespace = 'airflow'
     
     migrate_stakeholders = KubernetesPodOperator(
