@@ -9,7 +9,6 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 import psycopg2.extras
 from airflow.models import Variable
-from lib.utils import on_failure_callback
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -29,20 +28,20 @@ default_args = {
     # 'dag': dag,
     # 'sla': timedelta(hours=2),
     # 'execution_timeout': timedelta(seconds=300),
-    'on_failure_callback': on_failure_callback, # needs to be set in default_args to work correctly: https://github.com/apache/airflow/issues/26760
+    # 'on_failure_callback': some_function,
     # 'on_success_callback': some_other_function,
     # 'on_retry_callback': another_function,
     # 'sla_miss_callback': yet_another_function,
     # 'trigger_rule': 'all_success'
 }
 with DAG(
-    'stakeholder-migration',
+    'migrate-captures',
     default_args=default_args,
-    description='consolidate the stakeholder and entity tables',
+    description='migrate legacy data to new domain db',
     schedule_interval= "@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=['stakeholder','domain'],
+    tags=['db','domain'],
 ) as dag:
 
     t1 = BashOperator(
@@ -64,30 +63,106 @@ with DAG(
     image = 'greenstand/domain-migration-scripts:1.2.1'
     namespace = 'airflow'
     
-    migrate_stakeholders = KubernetesPodOperator(
+    migrate_trees = KubernetesPodOperator(
         namespace=namespace,
         image=image,
-        cmds=["sh", "-c", "npm run migrate-stakeholders"],
+        cmds=["sh", "-c", "npm run migrate-trees"],
         name="airflow-k8s-pod",
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
-        task_id="k8s-pod-migrate_stakeholders",
+        task_id="k8s-pod-migrate_trees",
         get_logs=True,
         env_vars=environments
     )
 
-    migrate_stakeholder_relation = KubernetesPodOperator(
+    migrate_planter_info = KubernetesPodOperator(
         namespace=namespace,
         image=image,
-        cmds=["sh", "-c", "npm run migrate-stakeholder-relations"],
+        cmds=["sh", "-c", "npm run migrate-planters"],
         name="airflow-k8s-pod",
         do_xcom_push=False,
         is_delete_operator_pod=True,
         in_cluster=True,
-        task_id="k8s-pod-migrate_stakeholder_relation",
+        task_id="k8s-pod-migrate_planter_info",
+        get_logs=True,
+        env_vars=environments
+    )
+    
+    migrate_tags = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "npm run migrate-tags"],
+        name="airflow-k8s-pod",
+        do_xcom_push=False,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        task_id="k8s-pod-migrate_tags",
         get_logs=True,
         env_vars=environments
     )
 
-    migrate_stakeholders >> migrate_stakeholder_relation >> t1
+    
+    migrate_device_configurations = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "npm run migrate-devices"],
+        name="airflow-k8s-pod",
+        do_xcom_push=False,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        task_id="k8s-pod-migrate_device_configurations",
+        get_logs=True,
+        env_vars=environments
+    )
+
+
+    migrate_species = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "npm run migrate-species"],
+        name="airflow-k8s-pod",
+        do_xcom_push=False,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        task_id="k8s-pod-migrate_species",
+        get_logs=True,
+        env_vars=environments
+    )
+    
+    migrate_raw_capture = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "npm run migrate-raw-captures"],
+        name="airflow-k8s-pod",
+        do_xcom_push=False,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        task_id="k8s-pod-migrate_raw_capture",
+        get_logs=True,
+        env_vars=environments
+    )
+
+    migrate_approved_capture = KubernetesPodOperator(
+        namespace=namespace,
+        image=image,
+        cmds=["sh", "-c", "npm run migrate-captures"],
+        name="airflow-k8s-pod",
+        do_xcom_push=False,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        task_id="k8s-pod-migrate_approved_capture",
+        get_logs=True,
+        env_vars=environments
+    )
+
+
+    migrate_planter_info >> migrate_raw_capture
+    
+    migrate_device_configurations >> migrate_raw_capture
+
+    migrate_species >> migrate_raw_capture
+    
+    migrate_tags >> migrate_raw_capture
+
+    migrate_raw_capture >> migrate_approved_capture >> migrate_trees >> t1
