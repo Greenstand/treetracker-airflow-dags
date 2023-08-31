@@ -82,7 +82,7 @@ with DAG(
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
               LEFT JOIN treetracker.capture AS tc
-              ON trees.uuid = tc.id::text
+              ON trees.uuid = cast(tc.id as text)
               LEFT JOIN (
                 SELECT region.name, region.geom
                 FROM region
