@@ -59,6 +59,7 @@ with DAG(
             cursor.execute("""
              SELECT
               trees.uuid AS capture_uuid,
+              trees.planting_organization_id AS tree_organization_uuid,
               planter.first_name AS planter_first_name,
               planter.last_name AS planter_last_name,
               COALESCE(planter.phone, planter.email) AS planter_identifier,
@@ -71,7 +72,8 @@ with DAG(
               planting_organization.stakeholder_uuid AS planting_organization_uuid,
               planting_organization.name AS planting_organization_name,
               tree_species.name AS species,
-              region.name as catchment
+              region.name AS catchment,
+              tc.tree_id AS tree_id
               FROM trees
               JOIN planter
               ON planter.id = trees.planter_id
@@ -79,6 +81,8 @@ with DAG(
               ON planting_organization.id = planter.organization_id
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
+              LEFT JOIN treetracker.capture AS tc
+              ON trees.uuid = tc.id
               LEFT JOIN (
                 SELECT region.name, region.geom
                 FROM region
@@ -109,7 +113,7 @@ with DAG(
                   (capture_uuid, planter_first_name, planter_last_name, planter_identifier,
                    capture_created_at, lat, lon, note, approved, 
                    planting_organization_uuid, planting_organization_name,
-                   species, catchment, gender )
+                   species, catchment, gender, tree_organization_uuid, tree_id  )
                   values
                   (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                   RETURNING *
@@ -118,7 +122,7 @@ with DAG(
                 row['capture_created_at'], row['lat'], row['lon'], row['note'], row['approved'],
                 row['planting_organization_uuid'], row['planting_organization_name'], 
                 row['species'],
-                row['catchment'], row['gender']
+                row['catchment'], row['gender'], row['tree_organization_uuid'], row['tree_id']
                 ) );
 
             conn.commit()
