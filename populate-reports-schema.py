@@ -59,7 +59,7 @@ with DAG(
             cursor.execute("""
              SELECT
               trees.uuid AS capture_uuid,
-              trees.planting_organization_id AS tree_organization_uuid,
+              tree_planting_organization.stakeholder_uuid AS tree_organization_uuid,
               planter.first_name AS planter_first_name,
               planter.last_name AS planter_last_name,
               COALESCE(planter.phone, planter.email) AS planter_identifier,
@@ -79,6 +79,8 @@ with DAG(
               ON planter.id = trees.planter_id
               LEFT JOIN entity AS planting_organization
               ON planting_organization.id = planter.organization_id
+              LEFT JOIN entity AS tree_planting_organization 
+              ON tree_planting_organization.id = trees.planting_organization_id 
               LEFT JOIN tree_species
               ON trees.species_id = tree_species.id
               LEFT JOIN treetracker.capture AS tc
