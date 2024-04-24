@@ -60,7 +60,7 @@ with DAG(
         'NODE_TLS_REJECT_UNAUTHORIZED': '0',
     }
 
-    image = 'greenstand/domain-migration-scripts:1.2.4'
+    image = 'greenstand/domain-migration-scripts:1.2.5'
     namespace = 'airflow'
     
     migrate_trees = KubernetesPodOperator(
