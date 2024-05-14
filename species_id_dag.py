@@ -16,7 +16,7 @@ default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'email_on_failure': False,
-    'start_date': datetime(2023, 1, 1),
+    'start_date': datetime(2024, 1, 1),
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
 }
@@ -36,7 +36,6 @@ def generate_input_manifest(image_urls):
     '''
     After fetching the image URLs from the database, generate the input manifest file and upload to S3 for the
     batch transform job to have an input
-
 
     :param image_urls:
     :return:
@@ -68,8 +67,8 @@ def trigger_batch_transform_job_inference(batch_input: str, batch_output: str, m
 
     batch_job_name = "species-id-job-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
     model_name = 'haitibeta1'
-    input_data_location = 's3://your-bucket/input-manifest.manifest'
-    output_location = 's3://your-bucket/output/'
+    input_data_location = 's3://treetracker-species-id/input-manifest.manifest'
+    output_location = 's3://treetracker-species-id/output/'
 
     # Create the batch transform job
     response = sm_boto3.create_transform_job(
@@ -139,6 +138,18 @@ write_results = PostgresOperator(
     dag=dag,
 )
 
+def clean_s3_buckets():
+    # Clean up S3 buckets after processing
+    s3 = boto3.client('s3')
+    s3.delete_object(Bucket='your-bucket', Key='today/input-manifest.manifest')
+    s3.delete_object(Bucket='your-bucket', Key='today/output/')
+    print("S3 buckets cleaned up")
+
+clean_s3_buckets = PythonOperator(
+    task_id='clean_s3_buckets',
+    python_callable=clean_s3_buckets,
+    dag=dag,
+)
 # Setting up dependencies
 fetch_data >> call_sagemaker_task >> write_results
 
