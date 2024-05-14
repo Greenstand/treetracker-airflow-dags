@@ -5,6 +5,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
 import time
+import os
 import json
 import boto3
 
@@ -12,6 +13,8 @@ import boto3
 This DAG fetches image URLs from a database, sends them to SageMaker for inference, and writes the results back to the database.
 Airflow initialization and DAG configuration
 '''
+
+inference_bucket = "s3://treetracker-species-id"
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -32,7 +35,7 @@ dag = DAG(
 '''
 Helper functions to generate the input manifest file and trigger the batch transform job in SageMaker
 '''
-def generate_input_manifest(image_urls):
+def generate_input_manifest(image_urls, dest_bucket):
     '''
     After fetching the image URLs from the database, generate the input manifest file and upload to S3 for the
     batch transform job to have an input
@@ -40,7 +43,6 @@ def generate_input_manifest(image_urls):
     :param image_urls:
     :return:
     '''
-
 
     # Path where the manifest file will be saved
     output_file_path = 'path/to/your/output-manifest.manifest'
@@ -58,18 +60,17 @@ def generate_input_manifest(image_urls):
     s3 = boto3.client('s3')
 
     # Upload the manifest file
-    s3.upload_file(Filename=output_file_path, Bucket='your-bucket', Key='path/to/your/output-manifest.manifest')
+    s3.upload_file(Filename=output_file_path, Bucket=dest_bucket, Key='path/to/your/output-manifest.manifest')
     print("Manifest file uploaded to S3")
 
-def trigger_batch_transform_job_inference(batch_input: str, batch_output: str, model_name: str, instance_type: str):
+def trigger_batch_transform_job_inference(model_name: str, instance_type: str='ml.m5.large'):
     # TODO: update payload and batch strategy as needed
     sm_boto3 = boto3.client('sagemaker', region_name='eu-central-1')
 
     batch_job_name = "species-id-job-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-    model_name = 'haitibeta1'
-    input_data_location = 's3://treetracker-species-id/input-manifest.manifest'
-    output_location = 's3://treetracker-species-id/output/'
-
+    model_name = model_name
+    input_data_location = os.path.join(inference_bucket, 'input-manifest.manifest')
+    output_location = os.path.join(inference_bucket, 'output')
     # Create the batch transform job
     response = sm_boto3.create_transform_job(
         TransformJobName=batch_job_name,
@@ -89,7 +90,7 @@ def trigger_batch_transform_job_inference(batch_input: str, batch_output: str, m
             'S3OutputPath': output_location
         },
         TransformResources={
-            'InstanceType': 'ml.m5.large',
+            'InstanceType': instance_type,
             'InstanceCount': 1
         }
     )
@@ -117,7 +118,7 @@ fetch_data = PostgresOperator(
 def call_sagemaker(**context):
     image_urls = context['ti'].xcom_pull(task_ids='fetch_data_from_db')
     # You might need to process image_urls before sending to SageMaker
-    generate_input_manifest(image_urls)
+    generate_input_manifest(image_urls, context["dest_bucket"])
     response = trigger_batch_transform_job_inference()
     return response
     # SageMaker API call goes here
@@ -141,8 +142,8 @@ write_results = PostgresOperator(
 def clean_s3_buckets():
     # Clean up S3 buckets after processing
     s3 = boto3.client('s3')
-    s3.delete_object(Bucket='your-bucket', Key='today/input-manifest.manifest')
-    s3.delete_object(Bucket='your-bucket', Key='today/output/')
+    s3.delete_object(Bucket=inference_bucket, Key='today/input-manifest.manifest')
+    s3.delete_object(Bucket=inference_bucket, Key='today/output/')
     print("S3 buckets cleaned up")
 
 clean_s3_buckets = PythonOperator(
