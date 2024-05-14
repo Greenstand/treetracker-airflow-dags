@@ -98,7 +98,8 @@ def trigger_batch_transform_job_inference(model_name: str, instance_type: str='m
 
 
 '''
-Airflow operators to fetch data from a database, send it to SageMaker for inference, and write the results back to the database.
+Airflow operators to fetch data from a database, send it to SageMaker for inference, and write the results back to the database. 
+Afterwards, clean up the S3 bucket used for inference.
 '''
 
 
@@ -139,7 +140,7 @@ write_results = PostgresOperator(
     dag=dag,
 )
 
-def clean_s3_buckets():
+def clean_s3_buckets(inference_bucket):
     # Clean up S3 buckets after processing
     s3 = boto3.client('s3')
     s3.delete_object(Bucket=inference_bucket, Key='today/input-manifest.manifest')
@@ -152,6 +153,6 @@ clean_s3_buckets = PythonOperator(
     dag=dag,
 )
 # Setting up dependencies
-fetch_data >> call_sagemaker_task >> write_results
+fetch_data >> call_sagemaker_task >> write_results >> clean_s3_buckets
 
 
