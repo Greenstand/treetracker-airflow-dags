@@ -1,8 +1,9 @@
 from datetime import timedelta, datetime
-from airflow import DAG
+from airflow import DAG, settings
 from airflow.providers.amazon.aws.operators.sagemaker import SageMakerEndpointOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.operators.python import PythonOperator
+from airflow.models import Connection
 from airflow.models import Variable
 import time
 import os
@@ -104,10 +105,39 @@ Afterwards, clean up the S3 bucket used for inference.
 
 
 # TODO: Currently placeholder SQL query to fetch image URLs from the database
+org_id = "8b2628b3-733b-4962-943d-95ebea918c9d"
+date = "2020-10-23"
 sql_filter_by_org_and_date = '''
-SELECT image_url from trees WHERE organization = 'your_org' AND date = '{{ ds }}'; 
-'''
+SELECT image_url from capture 
+WHERE planting_organization_id = %s 
+AND created_at >= '%s'; 
+'''% (org_id, date)
 
+
+def create_postgres_connection():
+    '''
+    TODO: Is this necessary?
+    '''
+    conn = Connection(
+        conn_id='my_postgres_conn_id',
+        conn_type='postgres',
+        host='your_host',
+        schema='your_schema',
+        login='your_username',
+        password=,
+        port='25060'
+    )
+
+    session = settings.Session()
+    if not session.query(Connection).filter(Connection.conn_id == conn.conn_id).first():
+        session.add(conn)
+        session.commit()
+        print(f"Connection {conn.conn_id} created successfully")
+    else:
+        print(f"Connection {conn.conn_id} already exists")
+
+
+create_postgres_connection()
 # Task to fetch data from the database
 fetch_data = PostgresOperator(
     task_id='fetch_data_from_db',
@@ -136,7 +166,7 @@ call_sagemaker_task = PythonOperator(
 write_results = PostgresOperator(
     task_id='write_results_to_db',
     postgres_conn_id='your_db_connection',
-    sql='sql/query_to_write_data.sql',  # You need to craft this based on how data needs to be written back
+    sql='sql/query_to_write_data.sql',  # You need to craft this based on how data needs to be written back # TODO: update
     dag=dag,
 )
 
