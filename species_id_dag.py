@@ -46,7 +46,7 @@ def generate_input_manifest(image_urls, dest_bucket):
     '''
 
     # Path where the manifest file will be saved
-    output_file_path = 'path/to/your/output-manifest.manifest'
+    output_file_path = 'daily-training.manifest'
 
     # Open a file to write
     with open(output_file_path, 'w') as file:
@@ -61,7 +61,7 @@ def generate_input_manifest(image_urls, dest_bucket):
     s3 = boto3.client('s3')
 
     # Upload the manifest file
-    s3.upload_file(Filename=output_file_path, Bucket=dest_bucket, Key='path/to/your/output-manifest.manifest')
+    s3.upload_file(Filename=output_file_path, Bucket=dest_bucket, Key=output_file_path)
     print("Manifest file uploaded to S3")
 
 def trigger_batch_transform_job_inference(model_name: str, instance_type: str='ml.m5.large'):
@@ -105,14 +105,14 @@ Afterwards, clean up the S3 bucket used for inference.
 
 
 # TODO: Currently placeholder SQL query to fetch image URLs from the database
-org_id = "8b2628b3-733b-4962-943d-95ebea918c9d"
-date = "2020-10-23"
+org_id = '8b2628b3-733b-4962-943d-95ebea918c9d'
+date = '2020-10-23'
 sql_filter_by_org_and_date = '''
-SELECT image_url from capture 
+SELECT image_url 
+FROM capture 
 WHERE planting_organization_id = %s 
-AND created_at >= '%s'; 
-'''% (org_id, date)
-
+AND captured_at >= %s;
+'''
 
 def create_postgres_connection():
     '''
@@ -165,7 +165,7 @@ call_sagemaker_task = PythonOperator(
 # Task to write the results back to the database
 write_results = PostgresOperator(
     task_id='write_results_to_db',
-    postgres_conn_id='your_db_connection',
+    postgres_conn_id='your_db_connection',# need to fill in
     sql='sql/query_to_write_data.sql',  # You need to craft this based on how data needs to be written back # TODO: update
     dag=dag,
 )
