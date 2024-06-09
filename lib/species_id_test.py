@@ -73,11 +73,9 @@ class Test(unittest.TestCase):
         :return:
         '''
         image_urls = [
-            "https://example.com/images/random1.jpg",
-            "https://example.com/images/random2.jpg",
-            "https://example.com/images/random3.jpg",
-            "https://example.com/images/random4.jpg",
-            "https://example.com/images/random5.jpg",
+            "https://herbarium.treetracker.org/taxa/AZADINDI/sl_2020.11.11.21.47.18_8.431009999999999_-13.22481166666667_8f390b40-6ded-45ea-bc66-157608319332_IMG_20201111_130443_4427911057078513137.jpg",
+            "https://herbarium.treetracker.org/taxa/CALOCALA/ht_2021.05.26.10.47.45_18.285754728130996_-73.56429898180068_24e57e15-35c0-41f7-919d-543d72620771_IMG_20210524_071644_268577763609314580.jpg",
+            "https://herbarium.treetracker.org/taxa/CATALONG/ht_2020.11.15.13.31.15_18.29337283037603_-73.55801749974489_b267cabe-7c8c-4ef5-b3bf-36c09f0053d9_img_20201111_075735_5165114301099204.jpg"
         ]
         output_file_path = '../local_data/daily-training.manifest'
 
@@ -102,31 +100,31 @@ class Test(unittest.TestCase):
         s3_client.upload_file(Filename=output_file_path, Bucket=dest_bucket, Key=key)
         print("Manifest file uploaded to S3")
 
-    def test_clean_s3_buckets(self):
-        # Verified this works on S3 console online
-        # Clean up S3 buckets after processing
-        inference_bucket = "treetracker-species-id"
-        key = "daily-training.manifest"
-        # Create an S3 client
-        s3_client = boto3.client('s3',
-                            aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
-                            aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
-                            )
-        s3_client.delete_object(Bucket=inference_bucket, Key=key)
-        s3_client.delete_object(Bucket=inference_bucket, Key=key)
-        print("S3 buckets cleaned up")
-
     def test_model_inferences(self):
+        '''
+        To Do: see if the result that results from this can be used in the Python script or in the DAG
+        
+        To Do: Automate permission writing for the manifest file so that the SageMaker job can access it- otherwise,
+        after creating it you need to go into it and manually allow SageMaker to access it. Maybe already solevd with recent
+        change to bucket-level permissions.
+
+
+        :return:
+        '''
         aws_client = boto3.client('sagemaker',
-                            aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
-                            aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
-                            )
+                                 aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
+                                 aws_secret_access_key=os.environ["AWS_SECRET_KEY"],
+                                region_name=os.environ["AWS_REGION"]
+                                 )
         batch_job_name = "species-id-job-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-        model_name = model_name
-        input_data_location = os.path.join(inference_bucket, 'input-manifest.manifest')
-        output_location = os.path.join(inference_bucket, 'output')
+        model_name = "haitibeta4"
+        data_manifest_file = "daily-training.manifest"  # this should be in the same bucket as the inference bucket
+        inference_bucket = "treetracker-species-id"
+        input_data_location = "s3://" + os.path.join(inference_bucket, 'daily-training.manifest')
+        output_location = "s3://" + os.path.join(inference_bucket)
+        assert input_data_location == "s3://treetracker-species-id/daily-training.manifest"
         # Create the batch transform job
-        response = sm_boto3.create_transform_job(
+        response = aws_client.create_transform_job(
             TransformJobName=batch_job_name,
             ModelName=model_name,
             MaxConcurrentTransforms=4,
@@ -144,12 +142,25 @@ class Test(unittest.TestCase):
                 'S3OutputPath': output_location
             },
             TransformResources={
-                'InstanceType': instance_type,
+                'InstanceType': "ml.g4dn.xlarge",
                 'InstanceCount': 1
             }
         )
-        print("response:", response)
+        print("Inference response:", response)
 
+    # def test_clean_s3_buckets(self):
+    #     # Verified this works on S3 console online
+    #     # Clean up S3 buckets after processing
+    #     inference_bucket = "treetracker-species-id"
+    #     key = "daily-training.manifest"
+    #     # Create an S3 client
+    #     s3_client = boto3.client('s3',
+    #                         aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
+    #                         aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
+    #                         )
+    #     s3_client.delete_object(Bucket=inference_bucket, Key=key)
+    #     s3_client.delete_object(Bucket=inference_bucket, Key=key)
+    #     print("S3 buckets cleaned up")
 
 if __name__ == '__main__':
     # print (os.environ["DB_HOST"])
