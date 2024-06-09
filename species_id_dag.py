@@ -182,7 +182,14 @@ clean_s3_buckets = PythonOperator(
     python_callable=clean_s3_buckets,
     dag=dag,
 )
-# Setting up dependencies
-fetch_data >> call_sagemaker_task >> write_results >> clean_s3_buckets
 
+
+# Setting up dependencies
+# if we need to run separate sagemaker model inference tasks, we will have multiple parallell
+# call_sagemaker_tasks which will be tested separately.
+
+
+
+
+fetch_data >> call_sagemaker_task >> write_results >> clean_s3_buckets
 
