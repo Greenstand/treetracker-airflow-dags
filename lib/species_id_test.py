@@ -103,10 +103,13 @@ class Test(unittest.TestCase):
     def test_model_inferences(self):
         '''
         To Do: see if the result that results from this can be used in the Python script or in the DAG
-        
+
         To Do: Automate permission writing for the manifest file so that the SageMaker job can access it- otherwise,
         after creating it you need to go into it and manually allow SageMaker to access it. Maybe already solevd with recent
         change to bucket-level permissions.
+
+        To Do: Test model output from notebook or normal perspective doesn't differ from batch transform API
+        (i.e. ensure preprocessing is consistent)
 
 
         :return:
