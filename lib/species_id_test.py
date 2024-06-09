@@ -8,6 +8,7 @@ import time
 
 
 # assigns environment variables for testing
+# this file might be moved to the root directory
 import credentials
 
 
