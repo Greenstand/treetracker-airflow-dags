@@ -202,14 +202,41 @@ class Test(unittest.TestCase):
             }
         )
         print("Inference response:", response)
-        print (response.content)
 
         # Use the json module to load CKAN's response into a dictionary.
         response_dict = json.loads(response.text)
 
         for i in response_dict:
             print("key: ", i, "val: ", response_dict[i])
+    def test_get_predictions_as_json(self):
+        s3_client = boto3.client('s3',
+                                 aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
+                                 aws_secret_access_key=os.environ["AWS_SECRET_KEY"],
+                                region_name=os.environ["AWS_REGION"]
+                                 )
 
+
+        inference_bucket = "treetracker-species-id"
+
+        # List objects in the specified S3 bucket and prefix
+        response = s3_client.list_objects_v2(Bucket=inference_bucket, Prefix="predictions")
+
+        # Loop through each object and process .out files
+        for obj in response.get('Contents', []):
+            key = obj['Key']
+            pred_file_name = os.path.splitext(key.split('/')[-1])[0]
+            if key.endswith('.out'):
+                # Download the .out file
+                with open('../local_data/' + key.split('/')[-1], 'wb') as f:
+                    s3_client.download_fileobj(inference_bucket, key, f)
+                # Read and process the .out file
+                with open('../local_data/' + key.split('/')[-1], 'r') as f:
+                    prediction = json.loads(f.read())
+                    # Do whatever processing you need with the prediction
+                    with open('../local_data/' + pred_file_name + '.json', 'w') as json_file:
+                        json.dump(prediction, json_file)
+                        os.remove('../local_data/' + key.split('/')[-1])
+        
     def test_clean_s3_buckets(self):
         # Verified this works on S3 console online
         # Clean up S3 buckets after processing
