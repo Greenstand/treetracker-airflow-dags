@@ -5,8 +5,29 @@ import os
 import boto3
 import json
 import time
+import urllib
+import urllib3
+
+'''
+Make sure treetracker-species-id has the following policy added
 
 
+{
+  "Statement":[
+    {
+      "Sid": "AddPerm",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::examplebucket/*"
+    }
+  ]
+}
+
+
+so that the uploaded manifest file can be read by SageMakers. Otherwise you have to manually change the 
+permissions on the manifest file after uploading and before starting the SageMaker job. 
+'''
 # assigns environment variables for testing
 # this file might be moved to the root directory
 import credentials
@@ -79,16 +100,6 @@ class Test(unittest.TestCase):
         ]
         output_file_path = '../local_data/daily-training.manifest'
 
-        # Open a file to write
-        with open(output_file_path, 'w+') as file:
-            for uri in image_urls:
-                # Create a dictionary with the 'source-ref' key
-                entry = {"source-ref": uri}
-                # Write the JSON object as a string to the file
-                file.write(json.dumps(entry) + '\n')
-
-        print(f"Manifest file created at {output_file_path}")
-
         # Create an S3 client
         s3_client = boto3.client('s3',
                             aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
@@ -96,9 +107,28 @@ class Test(unittest.TestCase):
                             )
 
         dest_bucket = "treetracker-species-id"
-        key = "daily-training.manifest"
-        s3_client.upload_file(Filename=output_file_path, Bucket=dest_bucket, Key=key)
+        key = "inference/daily-training.manifest"
+        http = urllib3.PoolManager()
+
+        # Open a file to write
+        with open(output_file_path, 'w+') as file:
+            for uri in image_urls:
+                # Create a dictionary with the 'source-ref' key
+                entry = {"image-ref": uri}
+                # Write the JSON object as a string to the file
+                file.write(json.dumps(entry) + '\n')
+                urllib.request.urlopen(uri)  # Provide URL
+                # stream file to s3 bucket
+                s3_client.upload_fileobj(http.request('GET', uri, preload_content=False),
+                                         dest_bucket,
+                                         "inference" + "/" + uri.split('/')[-1],
+                )
+
+        print(f"Manifest file created at {output_file_path}")
+        # s3_client.upload_file(Filename=output_file_path, Bucket=dest_bucket, Key=key,
+        #                      )
         print("Manifest file uploaded to S3")
+
 
     def test_model_inferences(self):
         '''
@@ -120,50 +150,78 @@ class Test(unittest.TestCase):
                                 region_name=os.environ["AWS_REGION"]
                                  )
         batch_job_name = "species-id-job-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-        model_name = "haitibeta4"
+        model_name = "haitibeta2"
         data_manifest_file = "daily-training.manifest"  # this should be in the same bucket as the inference bucket
         inference_bucket = "treetracker-species-id"
-        input_data_location = "s3://" + os.path.join(inference_bucket, 'daily-training.manifest')
-        output_location = "s3://" + os.path.join(inference_bucket)
-        assert input_data_location == "s3://treetracker-species-id/daily-training.manifest"
+
+        input_data_location = "s3://" + inference_bucket + "/" + "inference/"
+        output_location = "s3://" + inference_bucket + "/" + "predictions/"
+        assert input_data_location == "s3://treetracker-species-id/inference/"
+        assert output_location == "s3://treetracker-species-id/predictions/"
         # Create the batch transform job
+        # see documentation here: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sagemaker/client/create_transform_job.html
         response = aws_client.create_transform_job(
             TransformJobName=batch_job_name,
             ModelName=model_name,
-            MaxConcurrentTransforms=4,
+            MaxConcurrentTransforms=1,
             MaxPayloadInMB=6,
-            BatchStrategy='MultiRecord',
+            BatchStrategy='MultiRecord', # batch strategy and corresponding transform input configs
             TransformInput={
                 'DataSource': {
                     'S3DataSource': {
-                        'S3DataType': 'ManifestFile',
+                        'S3DataType': 'S3Prefix',
                         'S3Uri': input_data_location
                     }
                 },
+            'ContentType': 'image/jpeg',
+            'CompressionType': 'None',
+            'SplitType': 'None'
             },
             TransformOutput={
-                'S3OutputPath': output_location
+                'S3OutputPath': output_location,
+                'Accept': 'application/json'
             },
             TransformResources={
                 'InstanceType': "ml.g4dn.xlarge",
                 'InstanceCount': 1
+            } # can add optional experiment tracking configs
+            # ExperimentConfig = {
+            #     'ExperimentName': 'species-id-haiti-dag-test',
+            #     'TrialName': '1',
+            #     'TrialComponentDisplayName': '1',
+            #     'RunName': '1'
+            # }
+        )
+        waiter = aws_client.get_waiter('transform_job_completed_or_stopped')
+
+        waiter.wait(
+            TransformJobName=batch_job_name,
+            WaiterConfig={
+                'Delay': 123,  # The amount of time in seconds to wait between attempts. Default: 60
+                'MaxAttempts': 123  # The maximum number of attempts to be made. Default: 60
             }
         )
         print("Inference response:", response)
+        print (response.content)
 
-    # def test_clean_s3_buckets(self):
-    #     # Verified this works on S3 console online
-    #     # Clean up S3 buckets after processing
-    #     inference_bucket = "treetracker-species-id"
-    #     key = "daily-training.manifest"
-    #     # Create an S3 client
-    #     s3_client = boto3.client('s3',
-    #                         aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
-    #                         aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
-    #                         )
-    #     s3_client.delete_object(Bucket=inference_bucket, Key=key)
-    #     s3_client.delete_object(Bucket=inference_bucket, Key=key)
-    #     print("S3 buckets cleaned up")
+        # Use the json module to load CKAN's response into a dictionary.
+        response_dict = json.loads(response.text)
+
+        for i in response_dict:
+            print("key: ", i, "val: ", response_dict[i])
+
+    def test_clean_s3_buckets(self):
+        # Verified this works on S3 console online
+        # Clean up S3 buckets after processing
+        inference_bucket = "treetracker-species-id"
+        key = "daily-training.manifest"
+        # Create an S3 client
+        s3_client = boto3.client('s3',
+                            aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
+                            aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
+                            )
+        s3_client.delete_object(Bucket=inference_bucket, Key=key)
+        print("S3 buckets cleaned up")
 
 if __name__ == '__main__':
     # print (os.environ["DB_HOST"])
