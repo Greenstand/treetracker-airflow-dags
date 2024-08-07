@@ -3,6 +3,10 @@ import requests
 import psycopg2
 import psycopg2.extras
 import json
+import urllib
+import urllib3
+import boto3
+
 
 from sshtunnel import SSHTunnelForwarder
 from sqlalchemy.orm import sessionmaker #Run pip install sqlalchemy
@@ -11,7 +15,41 @@ from sqlalchemy import create_engine
 
 import os
 
+def load_images_to_s3(image_urls, dest_bucket="treetracker-species-id"):
+    '''
+    Load image URLs to S3 bucket for inference
+    :param image_urls:
+    :param dest_bucket:
+    :return:
+    '''
+    s3_client = boto3.client('s3',
+                             aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
+                             aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
+                             )
+
+    http = urllib3.PoolManager()
+    # Open a file to write
+    for uri in image_urls:
+        # Write the JSON object as a string to the file
+        urllib.request.urlopen(uri)  # Provide URL
+        # stream file to s3 bucket
+        s3_client.upload_fileobj(http.request('GET', uri, preload_content=False),
+                                 dest_bucket,
+                                 "inference" + "/" + uri.split('/')[-1],
+                                 )
+
+    return True
+
+
 def get_image_urls(topleft, bottomright, startdate, enddate):
+    '''
+    Connect to the remote database and fetch the image URLs for the given bounding box and time range
+    :param topleft: top left GPS coordinate of the bounding box
+    :param bottomright: bottom right GPS Coordinate of the bounding box
+    :param startdate: starting period for inference
+    :param enddate: ending period for inference
+    :return:
+    '''
     results_list = None
     try:
         with SSHTunnelForwarder((os.environ["REMOTE_HOST"], int(os.environ["REMOTE_PORT"])),
@@ -32,18 +70,10 @@ def get_image_urls(topleft, bottomright, startdate, enddate):
                                            host="localhost",
                                            port=local_port,
                                            database=os.environ["DB_NAME"])
-            # create_engine_url =  'postgresql://%s:%s@%s/'%(os.environ["DB_USER"], os.environ["DB_PASSWORD"], os.environ["DB_HOST"]) + local_port + '/' + os.environ["DB_NAME"]
-            print("Engine URL: ", create_engine_url)
             engine = create_engine(create_engine_url)
             Session = sessionmaker(bind=engine)
             session = Session()
 
-            print('PostgreSQL Database session created')
-
-            # cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-            # TODO: Enter correct query for planting site, eventually use Prod DB
-            # test_sql = "SELECT * FROM public.trees LIMIT 5;"
             sql_filter_by_org_and_date = '''
                 SELECT e.image_url
                 FROM public.trees e
@@ -60,10 +90,8 @@ def get_image_urls(topleft, bottomright, startdate, enddate):
 
             result = session.execute(sql_filter_by_org_and_date)
             result_list = result.fetchall()
-            print(len(result_list))
             if len(result_list) > 0:
                 results_list = ([url[0] for url in result_list])
-                print("Got some matching database entries")
         session.close_all()
         server.close()
         return results_list
@@ -103,6 +131,16 @@ def generate_input_manifest(image_urls, dest_bucket):
     print("Manifest file uploaded to S3")
 
 def create_validation_set(local_inference_dir, acceptance_threshold=0.7):
+    '''
+
+    Create a set of images based on the inference results for a human annotator to review.
+
+    @param save_dir: Local directory to save the images and inferences to.
+    @param acceptance_threshold: Probability above which we will consider the model "confidence" high enough.
+    Needs to be >= 0.5.
+
+    :return:
+    '''
     num_imgs_passing_threshold = 0
     inference_files = 0
     for json_response in os.listdir(local_inference_dir):
@@ -129,3 +167,23 @@ def create_validation_set(local_inference_dir, acceptance_threshold=0.7):
                     print(f"Failed to download {image_url}")
                     continue
     print(f"Verification set created with {num_imgs_passing_threshold} images out of {inference_files} inference files")
+
+def clear_s3_after_inference(inference_bucket="treetracker-species-id"):
+    '''
+    Clean up S3 buckets after processing
+    :param inference_bucket:
+    :return:
+    '''
+    # Create an S3 client
+    s3_client = boto3.client('s3',
+                             aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
+                             aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
+                             )
+    # List objects in the specified S3 bucket and prefix
+    response = s3_client.list_objects_v2(Bucket=inference_bucket, Prefix="predictions")
+
+    # Loop through each object and process .out files
+    for obj in response.get('Contents', []):
+        key = obj['Key']
+        # TO DO: Write inference results to prod DB
+        s3_client.delete_object(bucket=inference_bucket, key=key)

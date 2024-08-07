@@ -49,27 +49,10 @@ class Test(unittest.TestCase):
 
         # Get image URLs from the database
         url_list = species_id.get_image_urls(haiti_topleft, haiti_bottomright, start_date, end_date)
-        print (url_list)
         return url_list
 
 
-    def test_get_max_time_created(self):
-        # Read environment variable for DB connection string
-        conn = psycopg2.connect(os.environ["DB_CONNECTION_STRING"], sslmode='require')
-
-        # SQL query to get the maximum time_created
-        sql_max_time_created = '''
-            SELECT MAX(time_created) AS max_time_created
-            FROM public.trees;
-        '''
-
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute(sql_max_time_created)
-        result = cursor.fetchone()
-        print(result['max_time_created'])
-
-        cursor.close()
-        conn.close()
+    #     conn.close()
 
     def test_generate_input_manifest(self):
         '''
@@ -92,34 +75,7 @@ class Test(unittest.TestCase):
         output_file_path = '../local_data/daily-training.manifest'
 
         # Create an S3 client
-        s3_client = boto3.client('s3',
-                            aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
-                            aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
-                            )
-
-        dest_bucket = "treetracker-species-id"
-        key = "inference/daily-training.manifest"
-        http = urllib3.PoolManager()
-
-        # Open a file to write
-        with open(output_file_path, 'w+') as file:
-            for uri in image_urls:
-                # Create a dictionary with the 'source-ref' key
-                entry = {"image-ref": uri}
-                # Write the JSON object as a string to the file
-                file.write(json.dumps(entry) + '\n')
-                urllib.request.urlopen(uri)  # Provide URL
-                # stream file to s3 bucket
-                s3_client.upload_fileobj(http.request('GET', uri, preload_content=False),
-                                         dest_bucket,
-                                         "inference" + "/" + uri.split('/')[-1],
-                )
-
-        print(f"Manifest file created at {output_file_path}")
-        # s3_client.upload_file(Filename=output_file_path, Bucket=dest_bucket, Key=key,
-        #                      )
-        print("Manifest file uploaded to S3")
-
+        species_id.load_images_to_s3(image_urls)
 
     def test_model_inferences(self):
         '''
@@ -234,13 +190,9 @@ class Test(unittest.TestCase):
         print("S3 buckets cleaned up")
 
     def test_create_validation(self):
-        '''
-        To Do: Test if the images are downloaded and saved in the local directory
-        :return:
-        '''
         local_inference_dir = '../local_data/predictions/'
-        acceptance_threshold = 0.5
-        species_id.create_validation_set(local_inference_dir, acceptance_threshold)
+        species_id.create_validation_set(local_inference_dir, 0.5)
+
 if __name__ == '__main__':
     # print (os.environ["DB_HOST"])
     unittest.main()
