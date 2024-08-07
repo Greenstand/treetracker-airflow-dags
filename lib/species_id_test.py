@@ -7,7 +7,10 @@ import json
 import time
 import urllib
 import urllib3
-
+from sshtunnel import SSHTunnelForwarder
+from sqlalchemy.orm import sessionmaker #Run pip install sqlalchemy
+from sqlalchemy.engine import URL
+from sqlalchemy import create_engine
 '''
 Make sure treetracker-species-id has the following policy added
 
@@ -32,39 +35,23 @@ permissions on the manifest file after uploading and before starting the SageMak
 # this file might be moved to the root directory
 import credentials
 
+#  add https://treetracker-production-images.s3.eu-central-1.amazonaws.com/ before img
+
 
 class Test(unittest.TestCase):
     def test_data_import(self):
-        # read env variables DB_URL
-        conn = psycopg2.connect(os.environ["DB_CONNECTION_STRING"], sslmode='require')
         org_id = '8b2628b3-733b-4962-943d-95ebea918c9d'
-        start_date = '2019-03-05'
-        end_date = '2024-06-08'
+        start_date = '2024-06-24'
+        end_date = '2024-07-24'
 
         haiti_topleft = (20.02535383561072, -74.47685260343907)
         haiti_bottomright = (17.405263862983954, -71.5108667436321)
 
-        sql_filter_by_org_and_date = '''
-        SELECT e.image_url 
-        FROM public.trees e 
-        WHERE time_created > %s AND time_created < %s 
-        AND lat > %s AND lat < %s 
-        AND lon > %s AND lon < %s;
-        '''
+        # Get image URLs from the database
+        url_list = species_id.get_image_urls(haiti_topleft, haiti_bottomright, start_date, end_date)
+        print (url_list)
+        return url_list
 
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute(sql_filter_by_org_and_date, (start_date,
-                                                    end_date,
-                                                    haiti_topleft[1],
-                                                    haiti_bottomright[1],
-                                                    haiti_topleft[0],
-                                                    haiti_bottomright[0]
-                                                 ))
-        result = cursor.fetchall()
-        print(result)
-
-        cursor.close()
-        conn.close()
 
     def test_get_max_time_created(self):
         # Read environment variable for DB connection string
@@ -93,11 +80,15 @@ class Test(unittest.TestCase):
         :param image_urls:
         :return:
         '''
-        image_urls = [
-            "https://herbarium.treetracker.org/taxa/AZADINDI/sl_2020.11.11.21.47.18_8.431009999999999_-13.22481166666667_8f390b40-6ded-45ea-bc66-157608319332_IMG_20201111_130443_4427911057078513137.jpg",
-            "https://herbarium.treetracker.org/taxa/CALOCALA/ht_2021.05.26.10.47.45_18.285754728130996_-73.56429898180068_24e57e15-35c0-41f7-919d-543d72620771_IMG_20210524_071644_268577763609314580.jpg",
-            "https://herbarium.treetracker.org/taxa/CATALONG/ht_2020.11.15.13.31.15_18.29337283037603_-73.55801749974489_b267cabe-7c8c-4ef5-b3bf-36c09f0053d9_img_20201111_075735_5165114301099204.jpg"
-        ]
+        org_id = '8b2628b3-733b-4962-943d-95ebea918c9d'
+        start_date = '2024-06-24'
+        end_date = '2024-07-24'
+
+        haiti_topleft = (20.02535383561072, -74.47685260343907)
+        haiti_bottomright = (17.405263862983954, -71.5108667436321)
+
+        # Get image URLs from the database
+        image_urls = species_id.get_image_urls(haiti_topleft, haiti_bottomright, start_date, end_date)
         output_file_path = '../local_data/daily-training.manifest'
 
         # Create an S3 client
@@ -158,6 +149,7 @@ class Test(unittest.TestCase):
         output_location = "s3://" + inference_bucket + "/" + "predictions/"
         assert input_data_location == "s3://treetracker-species-id/inference/"
         assert output_location == "s3://treetracker-species-id/predictions/"
+
         # Create the batch transform job
         # see documentation here: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sagemaker/client/create_transform_job.html
         response = aws_client.create_transform_job(
@@ -185,12 +177,6 @@ class Test(unittest.TestCase):
                 'InstanceType': "ml.g4dn.xlarge",
                 'InstanceCount': 1
             } # can add optional experiment tracking configs
-            # ExperimentConfig = {
-            #     'ExperimentName': 'species-id-haiti-dag-test',
-            #     'TrialName': '1',
-            #     'TrialComponentDisplayName': '1',
-            #     'RunName': '1'
-            # }
         )
         waiter = aws_client.get_waiter('transform_job_completed_or_stopped')
 
@@ -203,11 +189,6 @@ class Test(unittest.TestCase):
         )
         print("Inference response:", response)
 
-        # Use the json module to load CKAN's response into a dictionary.
-        response_dict = json.loads(response.text)
-
-        for i in response_dict:
-            print("key: ", i, "val: ", response_dict[i])
     def test_get_predictions_as_json(self):
         s3_client = boto3.client('s3',
                                  aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
@@ -236,7 +217,9 @@ class Test(unittest.TestCase):
                     with open('../local_data/' + pred_file_name + '.json', 'w') as json_file:
                         json.dump(prediction, json_file)
                         os.remove('../local_data/' + key.split('/')[-1])
-        
+
+        # TO DO: Write inference results to prod DB
+
     def test_clean_s3_buckets(self):
         # Verified this works on S3 console online
         # Clean up S3 buckets after processing
@@ -250,6 +233,14 @@ class Test(unittest.TestCase):
         s3_client.delete_object(Bucket=inference_bucket, Key=key)
         print("S3 buckets cleaned up")
 
+    def test_create_validation(self):
+        '''
+        To Do: Test if the images are downloaded and saved in the local directory
+        :return:
+        '''
+        local_inference_dir = '../local_data/predictions/'
+        acceptance_threshold = 0.5
+        species_id.create_validation_set(local_inference_dir, acceptance_threshold)
 if __name__ == '__main__':
     # print (os.environ["DB_HOST"])
     unittest.main()
