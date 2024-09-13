@@ -5,7 +5,6 @@ from datetime import datetime
 import psycopg2
 import os
 
-database_url = os.getenv("DATABASE_URL",'postgresql://doadmin:l5al4hwte8qmj6x8@db-postgresql-sfo2-nextgen-do-user-1067699-0.db.ondigitalocean.com:25060/treetracker?ssl=true')
 
 def query_species_leaderboard():
     try:
