@@ -147,7 +147,7 @@ with DAG(
                                         current_session_segment["session_id"],
                                         current_session_segment["starts_at"],
                                         current_session_segment["ends_at"],
-                                        datetime.datetime.now(),
+                                        datetime.now(),
                                     ),
                                 )
                                 # update raw_capture session_segment_id
@@ -184,7 +184,7 @@ with DAG(
                                     current_session_segment["session_id"],
                                     current_session_segment["starts_at"],
                                     raw_captures[-1]['captured_at'],
-                                    datetime.datetime.now(),
+                                    datetime.now(),
                                 ),
                             )
                         
@@ -203,7 +203,7 @@ with DAG(
                                 UPDATE field_data.session SET processed_at = %s WHERE id = %s;
                             """,
                                 (
-                                    datetime.datetime.now(),
+                                    datetime.now(),
                                     session["id"],
                                 ),
                             )
@@ -225,7 +225,7 @@ with DAG(
                                     current_session_segment["session_id"],
                                     current_session_segment["starts_at"],
                                     current_session_segment["ends_at"],
-                                    datetime.datetime.now(),
+                                    datetime.now(),
                                     single_raw_capture['lon'],
                                     single_raw_capture['lat'],
                                 ),
@@ -246,7 +246,7 @@ with DAG(
                                 UPDATE field_data.session SET processed_at = %s WHERE id = %s;
                             """,
                                 (
-                                    datetime.datetime.now(),
+                                    datetime.now(),
                                     session["id"],
                                 ),
                             )
