@@ -1,6 +1,4 @@
 from datetime import datetime, timedelta
-from textwrap import dedent
-from pprint import pprint
 from airflow import DAG
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -10,7 +8,6 @@ from lib.utils import on_failure_callback
 import psycopg2
 import psycopg2.extras
 import uuid
-import datetime
 from typing import List
 
 psycopg2.extras.register_uuid()
