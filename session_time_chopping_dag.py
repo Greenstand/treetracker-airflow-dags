@@ -44,7 +44,7 @@ with DAG(
     schedule_interval= "@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=['reporting'],
+    tags=['capture_matching'],
 ) as dag:
 
     t1 = BashOperator(
