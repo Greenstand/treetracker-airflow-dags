@@ -87,11 +87,12 @@ with DAG(
             session_cursor.execute(
                 """
                 SELECT id FROM field_data.session s
-                WHERE s.processed_at is null and created_at < now() - interval '24 hours' limit 1000;
+                WHERE s.processed_at is null and created_at < now() - interval '24 hours' limit 5;
             """
             )
 
             for session in session_cursor:
+                print('processing session', session["id"])
                 raw_capture_cursor.execute(
                     """
                         SELECT id, captured_at, lat, lon FROM field_data.raw_capture rc WHERE rc.session_id = %s ORDER BY captured_at asc;
@@ -252,6 +253,8 @@ with DAG(
                             )
                 else:
                     print('no raw captures found for', session["id"])
+                
+                print('session processed')
 
             conn.commit()
             return 0
