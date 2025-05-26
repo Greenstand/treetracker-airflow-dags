@@ -64,12 +64,12 @@ with DAG(
         elif(len(geom_unique_points) == 2):
             # geom_points has a length of 2. Necessary because the query computes to a linestring not a polygon in this case
             return f"""INSERT INTO field_data.session_segment (id, session_id, starts_at, ends_at, processed_at, convex_hull) 
-            VALUES (%s,%s,%s,%s,%s,(SELECT ST_Buffer(ST_MakeLine({geom_unique_points[0]}, {geom_unique_points[1]}), 0.01))
+            VALUES (%s,%s,%s,%s,%s,(SELECT ST_Buffer(ST_MakeLine({geom_unique_points[0]}, {geom_unique_points[1]}), 0.00001))
             )"""
         else:
             return f"""
                 INSERT INTO field_data.session_segment (id, session_id, starts_at, ends_at, processed_at, convex_hull)
-                VALUES (%s,%s,%s,%s,%s,(SELECT ST_Buffer({geom_unique_points[0]}, 0.01)))
+                VALUES (%s,%s,%s,%s,%s,(SELECT ST_Buffer({geom_unique_points[0]}, 0.00001)))
             """
 
     def chop_session(ds, **kwargs):
@@ -219,7 +219,7 @@ with DAG(
                         create_cursor.execute(
                             """
                                 INSERT INTO field_data.session_segment (id, session_id, starts_at, ends_at, processed_at, convex_hull)
-                                VALUES (%s,%s,%s,%s,%s,(SELECT ST_Buffer(ST_GeomFromText('POINT(%s %s)',4326), 0.01)))
+                                VALUES (%s,%s,%s,%s,%s,(SELECT ST_Buffer(ST_GeomFromText('POINT(%s %s)',4326), 0.00001)))
                             """,
                                 (
                                     current_session_segment["id"],
