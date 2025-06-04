@@ -87,7 +87,7 @@ with DAG(
             session_cursor.execute(
                 """
                 SELECT id FROM field_data.session s
-                WHERE s.processed_at is null and created_at < now() - interval '24 hours';
+                WHERE s.processed_at is null and created_at < now() - interval '24 hours' LIMIT 40000;
             """
             )
 
