@@ -11,6 +11,7 @@ def assign_new_trees_to_cluster(conn):
 
     # execute query
     cur = conn.cursor()
+    cur.execute("SET statement_timeout = '3600000'")  # 1 hour — prevents runaway ST_ClusterWithin from holding connections indefinitely
     cur.execute("""
       SELECT count(id)
       FROM trees
