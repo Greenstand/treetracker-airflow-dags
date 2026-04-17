@@ -26,6 +26,15 @@ def assign_new_trees_to_cluster(conn):
         print("no tree needs to assign to cluster")
         return
 
+    cur.execute("""
+        SELECT ST_Expand(ST_Extent(estimated_geometric_location), 0.005)
+        FROM trees
+        WHERE active = true
+        AND cluster_regions_assigned = false
+    """)
+    affected_bbox = cur.fetchone()[0]
+    print("affected bbox:", affected_bbox)
+
     # try/except block to catch errors
     try:
         # begin db transaction with isolation level READ COMMITTED
@@ -100,31 +109,29 @@ def assign_new_trees_to_cluster(conn):
         print("time elapsed:", datetime.datetime.now() - start)
         start = datetime.datetime.now()
 
-        # SQL
         zoomLevel14SQL = """
             SELECT 'cluster' AS type,
             St_centroid(clustered_locations) centroid,
             St_numgeometries(clustered_locations) count
-            FROM
-            (
-            SELECT Unnest(St_clusterwithin(estimated_geometric_location, 0.005)) clustered_locations
-            FROM   trees
-            WHERE  active = true
+            FROM (
+                SELECT Unnest(St_clusterwithin(estimated_geometric_location, 0.005)) clustered_locations
+                FROM trees
+                WHERE active = true
+                AND estimated_geometric_location && %s::geometry
             ) clusters
         """
-        cur.execute(zoomLevel14SQL)
+        cur.execute(zoomLevel14SQL, (affected_bbox,))
 
         print("time elapsed:", datetime.datetime.now() - start)
         start = datetime.datetime.now()
 
-        # get all rows
         rows = cur.fetchall()
         print("rows count:", len(rows))
         zoomLevel = 14
-        deleteZoomLevelSQL = f"""
-            DELETE FROM clusters WHERE zoom_level = {zoomLevel}
-        """
-        cur.execute(deleteZoomLevelSQL)
+        cur.execute(
+            "DELETE FROM clusters WHERE zoom_level = %s AND location && %s::geometry",
+            (zoomLevel, affected_bbox)
+        )
 
         # go through each row with index
         for index, row in enumerate(rows):
