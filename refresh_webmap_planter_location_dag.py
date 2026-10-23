@@ -42,7 +42,7 @@ with DAG(
         db = PostgresHook(postgres_conn_id=postgresConnId)
         conn = db.get_conn()
         
-        sql = 'REFRESH MATERIALIZED VIEW webmap.planter_location'
+        sql = 'REFRESH MATERIALIZED VIEW CONCURRENTLY webmap.planter_location'
 
         try:
             # Setup the cursor to execute SQL statements
